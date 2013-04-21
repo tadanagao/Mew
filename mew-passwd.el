@@ -177,8 +177,6 @@
 	      (set-process-filter   pro 'mew-passwd-filter)
 	      (set-process-sentinel pro 'mew-passwd-sentinel)
 	      (mew-passwd-rendezvous)
-	      (unless (file-exists-p tfile)
-		(setq mew-passwd-master nil))
 	      (when mew-passwd-master
 		(let ((coding-system-for-read 'undecided))
 		  (insert-file-contents tfile))
@@ -233,7 +231,7 @@
        ((string-match "invalid passphrase" string)
 	(mew-warn "Master password mismatch!")
 	(setq mew-passwd-master nil))
-       ((string-match "[bB]ad \\(?:session \\)?key" string)
+       ((string-match "bad key" string)
 	(mew-warn "Master password is wrong!")
 	(setq mew-passwd-master nil))
        ((string-match "Enter passphrase:" string)
