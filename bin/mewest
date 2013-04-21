@@ -56,16 +56,14 @@ clean_up_replica () {
 
 # Check if environment is Cygwin.
 check_cygwin () {
-    if type uname > /dev/null
-    then
+    if type uname > /dev/null; then
         true
     else
         return -1
     fi
     case `uname -s` in
     CYGWIN*)
-        if type cygpath > /dev/null
-        then
+        if type cygpath > /dev/null; then
             return 1
         else
             return -1
@@ -80,8 +78,7 @@ check_cygwin () {
 # Convert path style from Unix to Windows if environment is Cygwin.
 # Otherwise same path is simply echoed.
 path_conv() {
-    if [ $CYGWINENV = "yes" ];
-    then
+    if [ $CYGWINENV = "yes" ]; then
         cygpath -w "$1"
     else
         echo "$1"
@@ -105,8 +102,7 @@ case $? in
     ;;
 esac
 
-while getopts "b:hvs:" OPTION
-do
+while getopts "b:hvs:" OPTION; do
     case ${OPTION} in
       b)
         BASEDIR=${OPTARG}
