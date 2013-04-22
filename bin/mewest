@@ -19,6 +19,7 @@ OUTPUT=${OUTPUT:-/dev/null}
 LOCK=${BASEDIR}/.mewest.lock
 CYGWINENV=no
 SUFFIX=${SUFFIX:-.mew}
+SKIP_DIRS="trash ${INDEXDIR_ORG} ${INDEXDIR_REPLICA}"
 
 usage () {
     PROG=`basename $0`
@@ -28,6 +29,7 @@ USAGE: ${PROG} [directory]
   -h help
   -v verbose mode
   -b base dir
+  -d folder to be skipped
 __HDT__
     exit 1
 }
@@ -102,11 +104,14 @@ case $? in
     ;;
 esac
 
-while getopts "b:hvs:" OPTION; do
+while getopts "b:d:hvs:" OPTION; do
     case ${OPTION} in
       b)
         BASEDIR=${OPTARG}
         ;;
+      d)
+	SKIP_DIRS="${SKIP_DIRS} ${OPTARG}"
+	;;
       h)
         usage
         ;;
@@ -151,14 +156,17 @@ if [ -d "${BASEDIR}/${INDEXDIR}" ]; then
     echo "Purging old messages...done"
 fi
 
+FIND_SKIP_DIRS=
+for dir in ${SKIP_DIRS}; do
+    FIND_SKIP_DIRS="${FIND_SKIP_DIRS} -type d -name ${dir} -prune -o"
+done
+
 echo "Indexing new messages..."
 # "find"'s regular expression is NOT portable, sigh...
 # "[0-9]*" matches both "123" and "234.mew".
 
 ${FIND} "`path_conv \"${TGTDIR}\"`" \
-  -type d -name "trash" -prune -o \
-  -type d -name ${INDEXDIR_ORG} -prune -o \
-  -type d -name ${INDEXDIR_REPLICA} -prune -o \
+  ${FIND_SKIP_DIRS} \
   -type f \( -name "[0-9]" -o -name "[0-9]*[0-9]" -o -name "[0-9]*${SUFFIX}" \) -print |\
   ${ESTCMD} gather -cl -fm -cm -sd -xh "`path_conv \"${BASEDIR}/${INDEXDIR}\"`" - > ${OUTPUT} ||\
     cleanup_exit "Indexing new messages...failed"
