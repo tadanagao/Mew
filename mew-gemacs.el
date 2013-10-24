@@ -247,9 +247,9 @@
 
 (defvar mew-image-alist
   '((jpeg mew-jpeg-size "jpegtopnm" "pnmtojpeg")
-    (png  mew-png-size  "pngtopnm"  "pnmtopng")
-    (gif  mew-gif-size  "giftopnm"  "pnmtogif")
-    (tiff mew-tiff-size "tifftopnm" "pnmtotiff")))
+    (png  mew-png-size  "pngtopam"  "pnmtopng")
+    (gif  mew-gif-size  "giftopnm"  "pamtogif")
+    (tiff mew-tiff-size "tifftopnm" "pamtotiff")))
 
 (defun mew-image-format-ent (format)
   (assoc format mew-image-alist))
@@ -290,12 +290,12 @@
 	   (call-process-region (point-min) (point-max) prog
 				t '(t nil) nil)
 	   (if mew-image-display-resize-care-height
-	       (call-process-region (point-min) (point-max) "pnmscale"
+	       (call-process-region (point-min) (point-max) "pamscale"
 				    t '(t nil) nil
 				    "-xysize"
 				    (format "%d" width)
 				    (format "%d" height))
-	     (call-process-region (point-min) (point-max) "pnmscale"
+	     (call-process-region (point-min) (point-max) "pamscale"
 				  t '(t nil) nil
 				  "-xsize" (format "%d" width)))
 	   (if (and (string< emacs-version "22") ;; xxx

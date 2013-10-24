@@ -80,14 +80,17 @@
    ("image/tiff"  "\\.tif?f$" mew-b64 mew-prog-image mew-icon-image tiff)
    ("image/jpeg"  "\\.jpe?g$" mew-b64 mew-prog-image mew-icon-image jpeg)
    ("image/pjpeg" "\\.jfif$"  mew-b64 mew-prog-image mew-icon-image jpeg) ;; MS
+   ("image/jpg"   "^$"        mew-b64 mew-prog-image mew-icon-image jpeg) ;; unofficial
    ("image/png"   "\\.png$"   mew-b64 mew-prog-image mew-icon-image png)
    ("image/x-xwd" "\\.xwd$"   mew-b64 mew-prog-image mew-icon-image xwd)
    ("image/x-xbm" "\\.xbm$"   mew-b64 mew-prog-image mew-icon-image xbm)
    ("image/x-xpm" "\\.xpm$"   mew-b64 mew-prog-image mew-icon-image xpm)
    ("image/x-bmp" "\\.bmp$"   mew-b64 mew-prog-image mew-icon-image bmp)
+   ("image/bmp"   "^$"        mew-b64 mew-prog-image mew-icon-image bmp) ;; unofficial
    ("image/x-pcx" "\\.pcx$"   mew-b64 mew-prog-image mew-icon-image PCX)
    ("image/x-tga" "\\.tga$"   mew-b64 mew-prog-image mew-icon-image TGA)
    ("image/vnd.ms-modi" "\\.mdi$" mew-b64 mew-prog-image mew-icon-image)
+   ("image/vnd.microsoft.icon" "\\.ico$" mew-b64 mew-prog-image mew-icon-image ICO)
    ("image"       "^$"        mew-b64 mew-prog-image mew-icon-image)
    ;;
    ("model/iges" "\\.ige?s$" mew-b64 mew-prog-iges  mew-icon-image) ;; xxx
@@ -162,7 +165,7 @@
    ("application/x-zip-compressed"  "\\.zip$" mew-b64
     mew-prog-unzip                  mew-icon-application/octet-stream)
    ("application/octet-stream"
-    "\\.tar$\\|\\.tar\\.\\|\\.jar$\\|\\.gz$\\|\\.Z$\\|\\.taz$\\|\\.tgz$\\|\\.tbz$\\|\\.bz2?$\\|\\.lzh$\\|\\.bin$\\|\\.pgp$\\|\\.gpg$\\|\\.exe$\\|\\.dll$\\|\\.class$"
+    "\\.tar$\\|\\.tar\\.\\|\\.jar$\\|\\.gz$\\|\\.Z$\\|\\.taz$\\|\\.tgz$\\|\\.xz$\\|\\.txz$\\|\\.lzma?$\\|\\.tlz$\\|\\.tbz$\\|\\.bz2?$\\|\\.lzh$\\|\\.bin$\\|\\.pgp$\\|\\.gpg$\\|\\.exe$\\|\\.dll$\\|\\.class$"
     mew-b64 mew-prog-octet-stream mew-icon-application/octet-stream)
    ;;
    ("text/html"     "\\.html?$" nil     mew-prog-html      mew-icon-text)
@@ -179,9 +182,9 @@
     mew-prog-rfc822-headers    mew-icon-message/rfc822)
    ("text/csv"      "\\.csv$"   nil     mew-prog-text      mew-icon-text)
    ("text"         "^$"        nil     mew-prog-text      mew-icon-text)
-   ;; Unknown CT: matches here.
    ("application/xml"               "\\.xml$"  mew-b64
     mew-prog-xml2              mew-icon-text)
+   ;; Unknown CT: matches here.
    (t               "^$"       nil   mew-prog-octet-stream mew-icon-unknown)
    ;; Unknown suffix matches here and return the entry specified
    ;; by mew-content-type.
