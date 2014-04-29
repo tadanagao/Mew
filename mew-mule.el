@@ -37,7 +37,7 @@
     (if (null ecsdb)
 	(setq ret (mew-charset-m17n))
       (setq ret (mew-cs-to-charset (mew-ecsdb-get-cs ecsdb)))) ;; not hcs
-    (if (called-interactively-p 'interactive) (message "%s" ret)) ;; for debug
+    (if (mew-called-interactively-p) (message "%s" ret)) ;; for debug
     ret))
 
 (defun mew-ecsdb-guess-region (beg end)
@@ -94,8 +94,14 @@
 ;;;
 ;;;
 
+(defun mew-coding-system-equal (cs1 cs2)
+  ;; Emacs 22 causes an error if cs is not defined.
+  (condition-case nil
+      (coding-system-equal cs1 cs2)
+    (error nil)))
+
 (defun mew-cs-to-charset (cs)
-  (let ((dcsdb (mew-assoc-equal cs mew-cs-database-for-decoding 1 'coding-system-equal)))
+  (let ((dcsdb (mew-assoc-equal cs mew-cs-database-for-decoding 1 'mew-coding-system-equal)))
     (if (null dcsdb)
 	(mew-charset-m17n)
       (mew-dcsdb-get-charset dcsdb))))
@@ -133,7 +139,7 @@
 
 ;;; Copyright Notice:
 
-;; Copyright (C) 1998-2012 Mew developing team.
+;; Copyright (C) 1998-2014 Mew developing team.
 ;; All rights reserved.
 
 ;; Redistribution and use in source and binary forms, with or without

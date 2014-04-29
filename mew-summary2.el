@@ -113,7 +113,7 @@ If nodisplay is non-nil, displays the cached message."
 (defun mew-summary-recenter ()
   "Make the current line to the center of Summary mode."
   (interactive)
-  (if (or mew-summary-recenter-p (called-interactively-p 'interactive))
+  (if (or mew-summary-recenter-p (mew-called-interactively-p))
       (recenter (/ (- (window-height) 2) 2))))
 
 (defun mew-summary-display-preamble ()
@@ -183,7 +183,7 @@ function displays the current message or part. Even if it is
 already displayed, this function displays it again getting back
 to the beginning."
   (interactive "P")
-  (when (or redisplay (mew-sinfo-get-disp-msg) (called-interactively-p 'interactive))
+  (when (or redisplay (mew-sinfo-get-disp-msg) (mew-called-interactively-p))
     (mew-summary-msg-or-part
      (let* ((fld (mew-summary-folder-name))
 	    (vfld (mew-summary-folder-name 'ext))
@@ -195,7 +195,7 @@ to the beginning."
 	    (opart (mew-current-get-part fid))
 	    (cache (mew-cache-hit fld (or msg omsg)))
 	    (win (selected-window))
-	    (read-through (called-interactively-p 'interactive))
+	    (read-through (mew-called-interactively-p))
 	    (sumbuf (current-buffer))
 	    next prefetch)
        (unwind-protect
@@ -788,7 +788,7 @@ over the window. Type '\\[mew-summary-prev-page]' to see them when a message is 
 
 ;;; Copyright Notice:
 
-;; Copyright (C) 1996-2012 Mew developing team.
+;; Copyright (C) 1996-2014 Mew developing team.
 ;; All rights reserved.
 
 ;; Redistribution and use in source and binary forms, with or without

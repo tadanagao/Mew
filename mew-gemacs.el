@@ -5,6 +5,12 @@
 
 ;;; Code:
 
+(defvar mew-prog-pamscale (or (executable-find "pamscale") "pnmscale"))
+(defvar mew-prog-pamscale-opt
+  (cond
+   ((string-match "pamscale" mew-prog-pamscale) "-xyfit")
+   ((string-match "pnmscale" mew-prog-pamscale) "-xysize")))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Menu setting
@@ -353,12 +359,12 @@
 				t '(t nil) nil)
 	   (setq format 'pbm))
 	 (if mew-image-display-resize-care-height
-	     (call-process-region (point-min) (point-max) "pamscale"
+	     (call-process-region (point-min) (point-max) mew-prog-pamscale 
 				  t '(t nil) nil
-				  "-xyfit"
+				  mew-prog-pamscale-opt
 				  (format "%d" width)
 				  (format "%d" height))
-	   (call-process-region (point-min) (point-max) "pamscale"
+	   (call-process-region (point-min) (point-max) mew-prog-pamscale
 				t '(t nil) nil
 				"-xsize" (format "%d" width)))
 	 (message "Resizing image...done"))
@@ -428,7 +434,7 @@
 
 ;;; Copyright Notice:
 
-;; Copyright (C) 1997-2012 Mew developing team.
+;; Copyright (C) 1997-2014 Mew developing team.
 ;; All rights reserved.
 
 ;; Redistribution and use in source and binary forms, with or without

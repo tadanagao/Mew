@@ -310,11 +310,25 @@ requires PTY.")
       (set-mouse-position
        (selected-frame) (1- (frame-width)) 0)))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Unix/Mac/Win
+;;;
+
+(cond 
+ ((>= emacs-major-version 24)
+  ;; this must be macro. If implemented as a function, its behavior
+  ;; is changed.
+  (defmacro mew-called-interactively-p ()
+    '(called-interactively-p 'interactive)))
+ (t
+  (defalias 'mew-called-interactively-p 'called-interactively-p)))
+
 (provide 'mew-env)
 
 ;;; Copyright Notice:
 
-;; Copyright (C) 1997-2012 Mew developing team.
+;; Copyright (C) 1997-2014 Mew developing team.
 ;; All rights reserved.
 
 ;; Redistribution and use in source and binary forms, with or without
