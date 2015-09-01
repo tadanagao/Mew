@@ -61,14 +61,14 @@ check_cygwin () {
     if type uname > /dev/null; then
         true
     else
-        return -1
+        return 255
     fi
     case `uname -s` in
     CYGWIN*)
         if type cygpath > /dev/null; then
             return 1
         else
-            return -1
+            return 255
         fi
         ;;
     *)
@@ -100,7 +100,7 @@ case $? in
     ;;
 *)
     echo Environment check failed
-    exit -1
+    exit 255
     ;;
 esac
 

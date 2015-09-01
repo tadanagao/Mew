@@ -27,9 +27,9 @@ A file name of a certificate should be 'cert-hash.0'.
 
 (defvar mew-prog-ssl-arg nil
   "For stunnel v3, a list of command-line arguments, each one a string.
-For stunnel v4, a string of extra text to place in the configuration file,
-which should end with a newline (example: \"fips=no\\n\"); or nil to insert
-no extra text.")
+For stunnel v4 or v5, a string of extra text to place in the configuration
+file, which should end with a newline (example: \"fips=no\\n\"); or nil to
+insert no extra text.")
 
 (defvar mew-ssl-ver nil)
 (defvar mew-ssl-minor-ver nil)
@@ -282,7 +282,7 @@ A local port number can be obtained the process name after ':'. "
 
 ;;; Copyright Notice:
 
-;; Copyright (C) 2002-2014 Mew developing team.
+;; Copyright (C) 2002-2015 Mew developing team.
 ;; All rights reserved.
 
 ;; Redistribution and use in source and binary forms, with or without

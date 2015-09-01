@@ -1394,7 +1394,7 @@ than mew-file-max-size, Mew skips MIME analysis."
   :group 'mew-message
   :type 'integer)
 
-(defcustom mew-header-reasonable-size 5000
+(defcustom mew-header-reasonable-size 10000
   "*The max size of header to be inserted to a temporary buffer to
 obtain any fields."
   :group 'mew-message
@@ -3288,7 +3288,7 @@ Level 2: syntax error."
 
 ;;; Copyright Notice:
 
-;; Copyright (C) 1996-2014 Mew developing team.
+;; Copyright (C) 1996-2015 Mew developing team.
 ;; All rights reserved.
 
 ;; Redistribution and use in source and binary forms, with or without
