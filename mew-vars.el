@@ -117,6 +117,11 @@
   :group 'mew-env
   :type 'directory)
 
+(defcustom mew-suffix ".mew"
+  "*Suffix of message files.  This suffix will be added if `mew-use-suffix` is non-nil."
+  :group 'mew-env
+  :type 'string)
+
 (defcustom mew-pop-inbox-folder "$inbox"
   "*The default folder for POP."
   :group 'mew-folder
@@ -1400,7 +1405,7 @@ obtain any fields."
   :group 'mew-message
   :type 'integer)
 
-(defcustom mew-header-max-length 200
+(defcustom mew-header-max-length 400
   "*If the length of a header exceeds this value,
 it is not arranged nor MIME decoded.
 See also 'mew-header-max-depth'."
