@@ -10,28 +10,28 @@
 
 @ifset ja
 @c Mew の texinfo
-@c Copyright (C) 1996-2018 山本和彦
+@c Copyright (C) 1996-2023 Mew developing team.
 @c M-x texinfo-format-buffer で info にしてね。
 @end ifset
 @ifset en
 @c Texinfo for Mew
-@c Copyright (C) 1996-2018 Kazuhiko Yamamoto
+@c Copyright (C) 1996-2023 Mew developing team.
 @c Try "M-x texinfo-format-buffer" or makeinfo to get the Info.
 @end ifset
 
-@set version 6.8
-@set modified 2018/06/07
-@set X-Mailer Mew version 6.8 on Emacs 26.1
+@set version 6.9
+@set modified 2023/02/11
+@set X-Mailer Mew version 6.9 on Emacs 28.2
 
 @titlepage
 @sp 10
 @center
 @title Mew
 @ifset ja
-@author Copyright @copyright{}1996-2018 山本和彦
+@author Copyright @copyright{}1996-2023 Mew developing team.
 @end ifset
 @ifset en
-@author Copyright @copyright{}1996-2018 Kazuhiko Yamamoto
+@author Copyright @copyright{}1996-2023 Mew developing team.
 @end ifset
 @end titlepage
 
@@ -136,13 +136,13 @@ home page (http://www.Mew.org/).
 
 @ifset ja
 Mew とは、テキスト・メールやマルチメディア・メール(MIME)、ニュース、セ
-キュリティ機能(PGP、S/MIME、SSH、SSL)を便利に利用するためのユーザインター
+キュリティ機能(PGP、S/MIME、SSH、TLS)を便利に利用するためのユーザインター
 フェイスです。最新の検索サービスとも連動します。
 @end ifset
 @ifset en
 Mew is a user interface for text messages, multimedia messages (MIME),
 news articles and security functionality including PGP, S/MIME, SSH,
-and SSL. Also, Mew can work with the recent search services.
+and TLS. Also, Mew can work with the recent search services.
 @end ifset
 
 @ifset ja
@@ -292,11 +292,11 @@ the name.
 @end ifset
 
 @ifset ja
-Emacs 24.3 以降を使って下さい。これらより前のバージョンや XEmacs は、サ
+Emacs 26.1 以降を使って下さい。これらより前のバージョンや XEmacs は、サ
 ポートしていません。
 @end ifset
 @ifset en
-Please use Emacs 24.3 or later. Mew doesn't support earlier versions
+Please use Emacs 26.1 or later. Mew doesn't support earlier versions
 nor XEmacs.
 @end ifset
 
@@ -427,10 +427,10 @@ as follows:
 @item +draft
 書きかけのメッセージを保存しておくローカル・フォルダ。
 @item +queue
-書き終ってメールの配送に適した書式に変換されたメッセージが溜るローカル・
-フォルダ。"+queue" のメッセージは、いずれ SMTP によって送信さる。
+書き終わってメールの配送に適した書式に変換されたメッセージが溜るローカル・
+フォルダ。"+queue" のメッセージは、いずれ SMTP によって送信される。
 @item +postq
-書き終ってニュースに投稿するのに適した書式に変換されたメッセージが溜る
+書き終わってニュースに投稿するのに適した書式に変換されたメッセージが溜る
 ローカル・フォルダ。"+postq" のメッセージは、いずれ NNTP によって送信さ
 れる。
 @end ifset
@@ -512,7 +512,7 @@ omit "case:" if a case is "default".
 ついて、@xref{Refile} を参照して下さい。
 @end ifset
 @ifset en
-A combination of "case" and proto organized a world to which a message
+A combination of "case" and proto organizes a world to which a message
 belongs. A message can move within its world. To make it easy to
 search received messages afterward, they should be moved to proper
 folders. To know how to refile received messages, see @ref{Refile}.
@@ -734,6 +734,7 @@ To read and/or write articles of NetNews, the followings are necessary.
 @end ifset
 @vindex mew-use-cached-passwd
 @vindex mew-use-master-passwd
+@vindex mew-master-passwd-type
 
 @ifset ja
 メッセージを送受信したり、PGP や S/MIME を使ったりする場合には、パスワー
@@ -899,6 +900,90 @@ touch your Emacs. If you leave your PC and an Emacs expert happens to
 check your configuration, your passwords could be stolen.
 @end ifset
 
+@ifset ja
+Mew のマスターパスワード機能は Mew 独自のものですが、Emacs には
+auth-source と呼ばれるパスワードマネージャが含まれています。
+auth-source は .netrc 形式のテキストファイル、GNOME Keyring, macOS
+Keychain といった、プラットフォームが提供するパスワード保存機能にも対
+応しています。
+@end ifset
+@ifset en
+While the master password feature is one of the feature of Mew, Emacs
+supports ``auth-source'' password manager.  Auth-source is similar to
+Mew's master password but supports variety of platform-dependent
+password stores including .netrc-style plain text, GNOME Keyring, and
+macOS Keychain.
+@end ifset
+
+@ifset ja
+Mew の auth-source 対応は、まだ実験的なものです。
+auth-source を試すには、マスターパスワードを使用する
+設定に加えて、次のように設定します。
+@end ifset
+@ifset en
+Note that support for auth-source is still experimental.
+To try auth-source, configure the following variable:
+@end ifset
+
+@lisp
+(setq mew-master-passwd-type 'auth-source)
+(setq auth-sources '("~/.authinfo.gpg" "~/.authinfo" "~/.netrc"))
+@end lisp
+
+@ifset ja
+どのパスワード保存機能を使用するかは、@samp{auth-sources} 変数で設定で
+きます。上記設定では 3 個のファイルを探し、一番最初に見つかったものを
+使用します。@samp{auth-sources} を指定しなかった場合、
+デフォルトでは .netrc 形式のテキストファイルとして、~/.authinfoと
+いうファイルが使われます。GnuPG を使って暗号化し、~/.authinfo.gpg とい
+う名前で用意すれば、暗号化した状態で維持することも可能です。平文のファ
+イルにパスワードを保存するのは危険ですので、暗号化しておくことを強くお
+勧めします。詳しくは、@xref{(auth)Top} を参照してください。
+@end ifset
+@ifset en
+Which password store is used can be set by @samp{auth-sources}
+variable.  In this example, one of the three files which was found
+first is used.  By default .netrc-style text file named
+``~/.authinfo'' is used.  You can encrypt this file by using GnuPG and
+put the encrypted file as ``~/.authinfo.gpg'' and remove the original
+file.  Mew will use the encrypted version seamlessly.  It is strongly
+recommended to use an encrypted file to store your passwords because
+there is no protection in a plain text file.  For more details, see
+@xref{(auth)Top}.
+@end ifset
+
+@ifset ja
+.netrc 形式のテキストファイルを GnuPG で暗号化した場合、Mew は保存され
+たパスワードの使用時に、復号用の鍵にアクセスするためのパスフレーズを尋
+ねます。この復号処理には、EasyPG Assistant と呼ばれる Emacs パッケージ
+が使われます。このパッケージは GnuPG を呼び出して暗号の処理をします。
+多くの場合、デフォルトの設定で問題なく動作しますが、設定可能な項目がい
+くつかあります。詳しくは、@xref{(epa)Top} を参照してください。
+@end ifset
+@ifset en
+If you use encrypted version of the .netrc-style text file as your
+password store, Mew will ask you passphrase of the decryption key to
+retrieve passwords from the file.  For encryption and decryption, an
+Emacs package named EasyPG Assistant, which calls GnuPG from Emacs, is
+used.  While it works with no specific configuration in most cases,
+you can find several configuration knobs.  For more details, see
+@xref{(epa)Top}.
+@end ifset
+
+@ifset ja
+現在の auth-source には、記録したパスワードを上書き・消去できないとい
+う大きな欠点があることに注意してください。サーバのパスワードを変更した
+場合は、~/.authinfo.gpg ファイルを手動で編集してください。これは、将来の
+Emacs で修正される見込みです。
+@end ifset
+@ifset en
+Note that the current version of auth-source has a big problem that it
+cannot delete or update the password entry in the password store.  If
+you want to change or remove a password, you have to edit the
+~/.authinfo file manually.  This will be fixed in the future version
+of Emacs.
+@end ifset
+
 @c %%%%%%%%%%%%%%%%%
 
 @node start, Viewing, password, Overview
@@ -936,7 +1021,7 @@ Mew が起動していなければ、まず Mew を起動する。そして、�
 「修飾子」が @samp{+}(ローカル・フォルダ)なら、@samp{mew-mailbox-type} 
 からメールボックスが決定される。(@xref{retrieving} を参照) その他、すな
 わちリモート・フォルダなら、メッセージを取得するためのプロトコルが修飾子
-に応じて決る。
+に応じて決まる。
 
 @samp{mew-auto-get} が @samp{t} なら、到着したメッセージが非同期に取得さ
 れ、Summary モードへ一覧表示される。
@@ -1314,7 +1399,7 @@ description (Content-Description:)
 file name (Content-Disposition:).
 @end itemize
 
-Content-Description can be considered Subject: for each part. This
+Content-Description: can be considered Subject: for each part. This
 format is very similar to that of the attachment region in Draft mode.
 @end ifset
 
@@ -1404,8 +1489,8 @@ current message. Analyzed messages are temporarily cached.
 @end ifset
 
 @ifset ja
-メッセージの終りの部分がはっきりと分かるように、Mew はメッセージの最後に 
-"[End of message]" という文字列を表示します。また、パートの終りでは、
+メッセージの終わりの部分がはっきりと分かるように、Mew はメッセージの最後に 
+"[End of message]" という文字列を表示します。また、パートの終わりでは、
 "[Message is continued]" という文字列を表示します。これらの文字列はそれ
 ぞれ、@samp{mew-end-of-message-string} と @samp{mew-end-of-part-string}
 で指定できます。
@@ -1941,7 +2026,7 @@ decrypt and/or verify this kind messages with @samp{C-cC-z}.
 @ifset ja
 メールボックスへ到着したメッセージを +inbox へコピーし一覧表示するには、
 @samp{i} を使います。コピー元のメールボックスは @samp{mew-mailbox-type} 
-によって決ります。(@samp{M-x mew} を実行した際に、@samp{mew-proto} が 
+によって決まります。(@samp{M-x mew} を実行した際に、@samp{mew-proto} が 
 @samp{+} の場合も、@samp{mew-mailbox-type} に従ってメッセージがコピーさ
 れます。) 以下に取りうる値を示します。
 @end ifset
@@ -2135,10 +2220,10 @@ Here is a summary of the commands concerned with message retrieval:
 る。
 
 ローカル・フォルダで実行した場合、ケースと @samp{mew-mailbox-type} によ
-り取得方法が決る。@samp{mew-pop-delete} または @samp{mew-imap-delete}
+り取得方法が決まる。@samp{mew-pop-delete} または @samp{mew-imap-delete}
 の値が @samp{t} なら、メールボックスのメッセージを削除する。
 
-リモート・フォルダで実行した場合、ケースと取得方法はそのフォルダから決る。
+リモート・フォルダで実行した場合、ケースと取得方法はそのフォルダから決まる。
 サーバ側のメッセージは常に保存される。
 @item C-uI
 @samp{mew-pop-delete} または @samp{mew-imap-delete} を逆転させて @samp{I} 
@@ -2862,7 +2947,7 @@ example will not be decoded into Japanese.
 @end ifset
 @ifset en
 Several mailers are careless about the spec and regularly violate these
-rules. The right way to do is ask the programmers of such mailers to
+rules. The right way to do is to ask the programmers of such mailers to
 make the programs conformant to the spec. However, since there are so
 many mailers of this kind around the world, Mew tries to decode as many
 different formats as possible. In these cases Mew displays warnings such
@@ -3121,7 +3206,7 @@ follows:
 @end ifset
 
 @ifset ja
-行頭の単語中で、しかも、上の行の最後が "," で終る継続行でなければ、
+行頭の単語中で、しかも、上の行の最後が "," で終わる継続行でなければ、
 @samp{TAB} で @samp{mew-fields} に定義されているフィールド名を補完できま
 す。
 @end ifset
@@ -3648,7 +3733,7 @@ Summary モードには、現在読んでいるメッセージの情報を Addrb
 @end ifset
 @ifset en
 Summary mode includes the feature of directly registering the
-information of the current message into Addrbook. To register a
+information of the current message into Addrbook. To register an
 expansion rule, type @samp{C-cC-a}.
 @end ifset
 
@@ -3777,7 +3862,7 @@ automatically saved to the file "~/Mail/.mew-alias".
 @end ifset
 @ifset en
 The automatic registration would register unnecessary short names. If
-you want to remove these entry, take the following steps. First, type
+you want to remove these entries, take the following steps. First, type
 @samp{M-a} to open "~/Mail/.mew-alias". Then edit it as you do against a
 text file. Lastly, type @samp{C-xC-s} to save it. When saving it, the
 modifications are automatically reflected to Mew.
@@ -3872,7 +3957,7 @@ To: piglet@@example.org,
 @end example
 
 @ifset ja
-"@@" で終る文字列は強制的に展開します。たとえば、以下のように似たような 
+"@@" で終わる文字列は強制的に展開します。たとえば、以下のように似たような 
 短縮名があった場合を考えて下さい。
 @end ifset
 @ifset en
@@ -5627,7 +5712,7 @@ You may want to set @samp{mew-reply-all-alist} like this:
 
 @ifset ja
 あるアドレスが複数ある場合は、自動的に 1 つになります。また、匿名の宛先
-を表す ":;" で終るアドレスも、自動的に消去されます。
+を表す ":;" で終わるアドレスも、自動的に消去されます。
 @end ifset
 @ifset en
 If there are multiple entries for a certain address, they are
@@ -6073,13 +6158,13 @@ Encrypt with PGP
 Sign then encrypt with PGP
 @item pgp-encryption-signature (PEPS)
 Encrypt then sign with PGP
-@item pgp-signature (SS)
+@item smime-signature (SS)
 Sign with S/MIME
-@item pgp-encryption (sE)
+@item smime-encryption (SE)
 Encrypt with S/MIME
-@item pgp-signature-encryption (SSSE)
+@item smime-signature-encryption (SSSE)
 Sign then encrypt with S/MIME
-@item pgp-encryption-signature (SESS)
+@item smime-encryption-signature (SESS)
 Encrypt then sign with S/MIME
 @end ifset
 @end table
@@ -6503,7 +6588,7 @@ From: Pooh <winnie-the-pooh@@example.net>
 Here, there is a colon (":") after the explanatory comment
 @w{"}party". This is followed by some addresses that are delimited by
 "," and terminated by ";". If you write addresses in this format, Mew
-sends the message to the addresses with them removed form the
+sends the message to the addresses with them removed from the
 header. In this example, Piglet and Roo will receive the following
 message.
 @end ifset
@@ -6869,7 +6954,7 @@ IMAP に対しては、@samp{mew-imap-trash-folder} と
 @end ifset
 @ifset en
 For IMAP, the same rule is applied according to both
-@samp{mew-imap-trash-folder} and @samp{mew-imap-trash-folder-list}
+@samp{mew-imap-trash-folder} and @samp{mew-imap-trash-folder-list}.
 @end ifset
 
 @ifset ja
@@ -6985,7 +7070,7 @@ Delete all messages in a specified folder.
 @ifset en
 To refile a message, type @samp{o} and input a folder name, then
 @samp{o} is put. A folder is guessed neatly, so most time what you
-should to is just type @samp{RET}. For more information, refer to
+should do is just type @samp{RET}. For more information, refer to
 @ref{Refile}.
 @end ifset
 
@@ -7650,7 +7735,7 @@ Suppose you refile a message in folder A to folder B off-line. It is
 very inconvenient for you to retrieve a corresponding message in folder
 B from your IMAP server , in order to read it, after refile jobs are
 done online. You may want to read the messages refiled to folder B by
-just going to the folder B, without retrieval form the IMAP server.
+just going to the folder B, without retrieval from the IMAP server.
 @end ifset
 
 @ifset ja
@@ -8048,7 +8133,7 @@ staff@@example.jp and another message whose To: is staff@@example.net,
 the same folder would be selected with guess by folders
 (e.g. "+net/staff"). So, Mew allows you to define your own rules
 explicitly. (You must use the new format for
-@samp{mew-refile-guess-alist}.  For more information, see
+@samp{mew-refile-guess-alist}.  For more information, see @ref{config2}.
 @end ifset
 
 @ifset ja
@@ -8109,7 +8194,6 @@ The whole is a list of (<key> <alist>). A field name is specified for
 <value> is a field value for <key>. <folder> means a folder to be
 chosen if matched. You can write <rule> recursively instead of
 <folder>.
-(@xref{config2}.)
 @end ifset
 
 @ifset ja
@@ -8199,7 +8283,7 @@ to +project/honey.
 Information that which folder was chosen for messages is stored to
 @w{"}~/Mail/.mew-refile-msgid-alist". @samp{mew-lisp-max-length}
 controls the amount of this information. The default value is 2000
-messages. If you want limits it to 3000 messages, put the following to
+messages. If you want to limit it to 3000 messages, put the following to
 "~/.mew.el".
 @end ifset
 
@@ -8270,7 +8354,7 @@ The function to provide this feature is
 していたので、自分にメッセージが戻ってきました。
 @end ifset
 @ifset en
-Next, let's consider a care where Pooh replied to Piglet. Since Pooh
+Next, let's consider a case where Pooh replied to Piglet. Since Pooh
 Cc:ed the message to himself, the message was also delivered to him.
 @end ifset
 
@@ -8356,7 +8440,7 @@ p-p-p@@example.org が +from/piglet に整頓されたことを学習します�
 But such a work may bother you. So, first refile a message whose From:
 is piglet@@example.org to +from/piglet. At this time, +from/piglet is
 created. Next, refile a message whose From: is p-p-p@@example.org to
-+from/piglet. Here Mews learns that p-p-p@@example.org was refiled to
++from/piglet. Here Mew learns that p-p-p@@example.org was refiled to
 +from/piglet. After this, when messages whose From: is p-p-p@@example.org
 are refiled, +from/piglet is chosen.
 @end ifset
@@ -8475,8 +8559,8 @@ Mew では、フォルダ推測の規則を 2 つの変数、@samp{mew-refile-gu
 @ifset en
 Mew controls guess rules by two variables,
 @samp{mew-refile-guess-control} and @samp{mew-refile-ctrl-multi}. If you
-want multiple candidates, set @samp{mew-refile-ctrl-multi}
-@samp{t}. Otherwise, set it @samp{nil}.
+want multiple candidates, set @samp{mew-refile-ctrl-multi} to
+@samp{t}. Otherwise, set it to @samp{nil}.
 @end ifset
 
 @ifset ja
@@ -8548,8 +8632,8 @@ action.
 @end ifset
 @ifset en
 If you want to provide all candidates, +aaa - +eee, set
-@samp{mew-refile-ctrl-multi} @samp{t}. If you want to provide +aaa only,
-set it @samp{nil}.
+@samp{mew-refile-ctrl-multi} to @samp{t}. If you want to provide +aaa only,
+set it to @samp{nil}.
 @end ifset
 
 @ifset ja
@@ -8562,7 +8646,7 @@ set it @samp{nil}.
 @ifset en
 If you want +aaa - +ddd but do not want left candidates, in other words,
 you want +eee only when no candidate is guessed by functions executed
-before, set @samp{mew-refile-ctrl-multi} @samp{t} and insert
+before, set @samp{mew-refile-ctrl-multi} to @samp{t} and insert
 @samp{mew-refile-ctrl-throw} between @samp{mew-refile-guess-by-folder}
 and @samp{mew-refile-guess-by-default}.
 @end ifset
@@ -8740,7 +8824,7 @@ too. In this case, a message is moved in the same world.)
 @samp{li} を利用します。
 @end ifset
 @ifset en
-To opy a message in a folder to an IMAP folder (the server side), type
+To copy a message in a folder to an IMAP folder (the server side), type
 @samp{li}.
 @end ifset
 
@@ -8928,10 +9012,10 @@ several folders. There are five ways to create selection:
 @end ifset
 @ifset en
 @item m/
-Listing messages marked with @samp{*} on a folder. see @ref{sorting}.
+Listing messages marked with @samp{*} on a folder.
 @item S
 Sorting messages on a folder and display them. (No effect to the
-original folder.) see @ref{dialog}.
+original folder.) See @ref{sorting}.
 @item V
 Listing messages which have relationship with the current message. See
 @ref{dialog}.
@@ -9123,10 +9207,10 @@ described later in the following points:
 @ifset en
 @item
 Thread can be made from one folder or one virtual folder. Messages
-relating to dialog can ubiquitously exists in several folders.
+relating to dialog can ubiquitously exist in several folders.
 
 @item
-Thread visualizes tree structres with indentation. while dialog lists
+Thread visualizes tree structures with indentation while dialog lists
 up messages in order of time.
 @end ifset
 @end itemize
@@ -9140,7 +9224,7 @@ up messages in order of time.
 @end ifset
 @ifset en
 To use the feature of dialog, execute @samp{kI} to create
-database. New messages are not automatically registered in to the
+database. Since new messages are not automatically registered into the
 database, you should periodically execute @samp{kI}. @samp{kI} updates
 the database incrementally by default. This method is fast but
 garbages are left. So, sometime you should type @samp{C-ukI} to update
@@ -9245,7 +9329,7 @@ specified pattern.
 @item C-uk/
 Make selection with messages in specified folders, which are matched
 to a specified pattern. If you want to specify multiple folders,
-separate them with ",". You can also use a wildcar "*".
+separate them with ",". You can also use a wildcard "*".
 @end ifset
 @end table
 
@@ -9321,10 +9405,10 @@ Match if the "field" field contains the "string" string
 Match if the "field" field contains the "string" string
 (case-sensitive). If you specify "head", it means the entire header.
 @item field!=string
-Match if the "field" field does not the "string" string
+Match if the "field" field does not contain the "string" string
 (case-insensitive). If you specify "head", it means the entire header.
 @item field!==string
-Match if the "field" field does not the "string" string
+Match if the "field" field does not contain the "string" string
 (case-sensitive). If you specify "head", it means the entire header.
 @item ( <pattern> )
 Evaluate <pattern> first.
@@ -9553,7 +9637,7 @@ choose Hyper Estraier.
 コマンドは以下の通りです。
 @end ifset
 @ifset en
-The keyword which you specified on search is shorted in a buffer. You
+The keyword which you specified on search is stored in a buffer. You
 can display messages with the keyword highlighted. The commands to
 enable this functionality are as follows:
 @end ifset
@@ -9727,7 +9811,7 @@ Here are the commands used for moving to thread presentation.
 @ifset en
 @item tp
 Move to the top of the current thread. If the current message is a top
-node, move to the top of the next thread.
+node, move to the top of the previous thread.
 @item tn
 Move to the top of the next thread.
 @item ^
@@ -10093,7 +10177,7 @@ An example is as follows:
 先の先頭に加えられる文字列です。初期値は "To:" です。
 @end ifset
 @ifset en
-@samp{mew-summary-form-from-me-prefix} is the prefix to be prepend to an
+@samp{mew-summary-form-from-me-prefix} is the prefix to be prepend to a
 destination address if the message is originated by me. The default is
 @w{"}To:".
 @end ifset
@@ -10202,7 +10286,7 @@ refer to @ref{draft-mode}.
 が利用されます。
 @end ifset
 @ifset en
-If a element does not match, the next element is applied. If no element
+If an element does not match, the next element is applied. If no element
 matches to the From: field, or this value is @samp{nil}, the whole of
 the From: field is used.
 @end ifset
@@ -10261,7 +10345,7 @@ Summary モードの @samp{SPC} は、@samp{mew-summary-show-direction} によ�
 きます。以下の値を設定できます。
 @end ifset
 @ifset en
-@samp{SPC} in Summary mode decide the next action to view a message
+@samp{SPC} in Summary mode decides the next action to view a message
 according to @samp{mew-summary-show-direction}. Likewise, you can
 specify the cursor direction after putting a strong mark by
 @samp{mew-summary-mark-direction}. You can select one from the following
@@ -10315,6 +10399,7 @@ bottom, set as follows:
 @kindex C-cC-e (Summary)
 @kindex C-uC-cC-e (Summary)
 @kindex zz (Summary)
+@kindex h (Summary)
 @vindex mew-prog-text/html-ext
 @vindex mew-prog-msword-ext
 @vindex mew-prog-msexcel-ext
@@ -10337,10 +10422,8 @@ buffer.
 @end ifset
 
 @ifset ja
-@w{"}w3m" と "emacs-w3m" をインストールすると、Text/Html を Message バッ
-ファに表示できるようになります。(以下で説明する "wvHtml"、"xlhtml"、
-"ppthtml" は、単なる "w3m" ではなく、国際化された "w3m-m17n" が必要で
-す。) 両者をインストールしたら、"~/.mew.el" に以下の設定を加えて下さい。
+以下の設定を "~/mew.el"に加えれば、Text/Html を Message バッファに表示
+できるようになります。
 @end ifset
 @ifset en
 Text/Html can be displayed in Message mode, if you add the following to
@@ -10355,6 +10438,14 @@ Text/Html can be displayed in Message mode, if you add the following to
 これで、あたかも Text/Plain であるかのように、Text/Html を Message バッ
 ファに表示できるようになります。この際も、以下で説明する @samp{C-cC-e}
 の操作は有効です。
+
+デフォルトでは Text/Html の表示は Emacs の組み込みブラウザを使います。
+
+そのほか、w3m ブラウザを使って表示させることもできます。
+そのためには、まず @w{"}w3m" と "emacs-w3m" をインストールします。
+(以下で説明する "wvHtml"、"xlhtml"、
+"ppthtml" は、単なる "w3m" ではなく、国際化された "w3m-m17n" が必要で
+す。) 両者をインストールしたら、"~/.mew.el" に以下の設定を加えて下さい。
 @end ifset
 @ifset en
 With this, Text/Html can be displayed in Message mode as if it were
@@ -10403,13 +10494,18 @@ of displaying it in the Message buffer. For this, type @samp{C-cC-e}.
 @end ifset
 
 @ifset ja
-Message バッファに画像を表示することもできます。また @samp{C-cC-e} を使
-い、外部のプログラムに表示させることも可能です。
+Message バッファに画像を表示することもできます。
+Message バッファに表示している画像の拡大や縮小は @samp{C-xo} や @samp{h}等でカーソルを
+画像が表示されているウィンドウに移動し、@samp{i+} や @samp{i-} (emacs 28 までは @samp{+} や @samp{-}) を使います。
+また @samp{C-cC-e} を使い、外部のプログラムに表示させることも可能です。
 @end ifset
 @ifset en
-You can visualize an image file into the Message buffer. Also, you can
-display it with an external application by typing @samp{C-cC-e}, of
-course.
+You can visualize an image file into the Message buffer.
+If you want to enlarge or reduce the image in the Message buffer,
+you switch to a window of the Message buffer with e.g. @samp{C-xo}/@samp{h}
+and type @samp{i+} or @samp{i-} (@samp{+} or @samp{-} up to emacs 28), respectively.
+Also, you can display it with an external application by typing
+@samp{C-cC-e}, of course.
 @end ifset
 
 @ifset ja
@@ -10498,7 +10594,7 @@ application, type @samp{C-uC-cC-e}.
 
 @ifset ja
 最近、Multipart/Alternative の中に Text/Plain と Text/Html の両方が入っ
-ており、どちらかを選ぶようになっているメッセージを多く見掛けます。Mew
+ており、どちらかを選ぶようになっているメッセージ(いわゆる HTML メール)を多く見掛けます。Mew
 は、標準では Text/Plain の方を優先して表示します。"emacs-w3m" をインス
 トールすれば、Text/Html の方を優先したくなるかもしれません。その場合、
 以下の設定を "~/.mew.el" に加えて下さい。(ここで @xref{multipart} を読
@@ -10506,7 +10602,7 @@ application, type @samp{C-uC-cC-e}.
 @end ifset
 @ifset en
 Recently there are many message whose have Multipart/Alternative,
-which consists of Text/Plain and Text/Html. By default, Mew selects
+which consists of Text/Plain and Text/Html (so-called HTML email). By default, Mew selects
 Text/Plain. If you prefer to choose
 Text/Html, add the following to "~/.mew.el". (Now, it's a
 good idea to get back to @ref{multipart} to review how to use
@@ -10606,8 +10702,8 @@ To add Message-ID: to citation label, take this way.
 @end ifset
 
 @lisp
-(setq mew-cite-fields '("From:" "Subject:" "Date:" "Message-ID:"))
-(setq mew-cite-format "From: %s\nSubject: %s\nDate: %s\nMessage-ID: %s\n\n")
+(setq mew-cite-fields '("From:" "Subject:" "Date:" "Message-Id:"))
+(setq mew-cite-format "From: %s\nSubject: %s\nDate: %s\nMessage-Id: %s\n\n")
 @end lisp
 
 @ifset ja
@@ -10962,7 +11058,7 @@ US-ASCII, configure as follows:
 ジに色が付きます。初期値は @samp{t} です。
 @end ifset
 @ifset en
-If @samp{mew-use-highlight-mark} is @samp{t}, marked message are
+If @samp{mew-use-highlight-mark} is @samp{t}, marked messages are
 highlighted. The default is @samp{t}.
 @end ifset
 
@@ -11045,13 +11141,13 @@ feature, install the "netpbm" package and the "compface" package.
 @end ifset
 
 @ifset ja
-色を変更するには、Mew のソースと一緒に配布されている "dot.theme" を
+色を変更するには、Mew のソースと一緒に配布されている "conf/dot.theme" を
 適当な名前でコピーし内容を変更します。ここでは、そのファイル名を
 "~/.mew-theme.el" としましょう。まず、この名前を ".mew.el" で
 @samp{mew-theme-file} に指定して下さい。
 @end ifset
 @ifset en
-To modify colors, copy "dot.theme" contained Mew's source file to
+To modify colors, copy "conf/dot.theme" contained Mew's source file to
 an appropriate place, say "~/.mew-theme.el". First, set
 @samp{mew-theme-file} to this file name in ".mew.el" as follows:
 @end ifset
@@ -11082,7 +11178,7 @@ configuration.
 @ifset en
 The symbol @samp{header-subject} means the value of the "Subject:"
 field in a header. :tty is the case where Emacs is executed on a
-terminal while :light and :dark indicates the case where the
+terminal while :light and :dark indicate the case where the
 background of Emacs executed with a window is white and black,
 respectively.
 @end ifset
@@ -11103,10 +11199,10 @@ configuration as follows:
 @end lisp
 
 @ifset ja
-シンボルに何があるのかは、"dot.mew" を見て下さい。
+シンボルに何があるのかは、"conf/dot.theme" を見て下さい。
 @end ifset
 @ifset en
-To know what kind of symbols are prepared, see the "dot.mew".
+To know what kind of symbols are prepared, see the "conf/dot.theme".
 @end ifset
 
 @ifset ja
@@ -11329,8 +11425,6 @@ Hook called when a POP process finished.
 @item mew-pop-sentinel-non-biff-hook
 Hook called when a non-Biff POP process finished.
 @item mew-imap-sentinel-hook
-Hook called when a NNTP process to post messages finished.
-@item mew-imap-sentinel-hook
 Hook called when an IMAP process finished.
 @item mew-imap-sentinel-non-biff-hook
 Hook called when a non-Biff IMAP process finished.
@@ -11353,14 +11447,14 @@ Hook called when a folder renamed.
 @item mew-summary-toggle-disp-msg-hook
 Hook called when @samp{v} in Summary finished.
 @item mew-syntax-format-hook
-Hook called when mew-syntax-format is called.
+Hook called when @samp{mew-syntax-format} is called.
 @item mew-addrbook-mode-hook
 Hook called in Addrbook mode.
 @item mew-cite-hook
 Hook for an external cite mechanism. If you want to use super-cite, 
 (setq mew-cite-hook 'sc-cite-original).
 @item mew-before-cite-hook
-Called in mew-summary-reply-with-citation before citation.
+Called in @samp{mew-summary-reply-with-citation} before citation.
 @item mew-suspend-hook
 Hook called on suspend.
 @item mew-quit-hook
@@ -11372,7 +11466,7 @@ Hook called on quit.
 以下にフックの設定例を示します。
 @end ifset
 @ifset en
-Here are some example configurations of hook
+Here are some example configurations of hook.
 @end ifset
 
 @ifset ja
@@ -11384,7 +11478,7 @@ Draft モードでは、フックを @samp{text-mode-hook}、
 @ifset en
 Draft mode evaluates @samp{text-mode-hook} and
 @samp{mew-draft-mode-hook} in order. If you do not set
-@samp{auto-fill-mode} to @samp{text-mode-hook}, It would be useful to
+@samp{auto-fill-mode} to @samp{text-mode-hook}, it would be useful to
 define @samp{mew-draft-mode-hook} as follows:
 @end ifset
 
@@ -11427,9 +11521,11 @@ POP サーバの名前。
 @item mew-pop-ssh-server
 POP を SSH 経由で取得する場合の SSH サーバの名前。
 @item mew-pop-ssl
-POP over SSL を使うか否か。
+POP over TLS を使うか否か。@samp{'native} は GnuTLS
+を使った TLS 接続、@samp{'tunnel} は stunnel
+を使った TLS トンネル接続を意味する。
 @item mew-pop-ssl-port
-POP over SSL のポート番号。
+POP over TLS のポート番号。
 @item mew-pop-user
 POP のアカウント名。初期値はログイン名。
 @item mew-pop-auth
@@ -11461,16 +11557,18 @@ The name of your POP server.
 @item mew-pop-ssh-server
 The name of SSH server which forwards the POP3 port.
 @item mew-pop-ssl
-If non-nil, POP connections are made over SSL.
+If non-nil, POP connections are made over TLS.
+@samp{'native} enables GnuTLS for native TLS connection
+and @samp{'tunnel} uses stunnel to establish a TLS tunnel.
 @item mew-pop-ssl-port
-The port for POP over SSL.
+The port for POP over TLS.
 @item mew-pop-user
 The user name on your POP server. The default is your login name.
 @item mew-pop-auth
-The authentication method for POP3. 'pass means the authentication with
-USER/PASS (i.e. plain password). 'apop means the authentication with
+The authentication method for POP3. @samp{'pass} means the authentication with
+USER/PASS (i.e. plain password). @samp{'apop} means the authentication with
 APOP. @samp{t} means SASL according to @samp{mew-pop-auth-list}. The
-default is 'apop.
+default is @samp{'apop}.
 @item mew-pop-auth-list
 A list of SASL methods in the preferred order. Currently, "CRAM-MD5"
 can be used.
@@ -11481,11 +11579,11 @@ If number N, delete the messages N days after the first access. The
 default is @samp{t}.
 @item mew-pop-size
 The limit size of messages to be retrieved by POP. The default is 55296
-byte. 0 means unlimited, so you can get all messages from the POP
+bytes. 0 means unlimited, so you can get all messages from the POP
 server. To know how to retrieve the rest of a truncated message, please
 refer to @ref{retrieving}.
 @item mew-pop-body-lines
-*The limit of body lines to get when the size of message exceeds
+The limit of body lines to get when the size of message exceeds
 @samp{mew-pop-size}. The default is 40.
 @item mew-pop-header-only
 Whether or not the body of a message is retrieved by POP. If non-nil,
@@ -11518,9 +11616,11 @@ IMAP サーバの名前。
 @item mew-imap-ssh-server
 IMAP を SSH 経由で取得する場合の SSH サーバの名前。
 @item mew-imap-ssl
-IMAP over SSL を使うか否か。
+IMAP over TLS を使うか否か。@samp{'native} は GnuTLS
+を使った TLS 接続、@samp{'tunnel} は stunnel
+を使った TLS トンネル接続を意味する。
 @item mew-imap-ssl-port
-IMAP over SSL のポート番号。
+IMAP over TLS のポート番号。
 @item mew-imap-user
 IMAP のアカウント名。初期値はログイン名。
 @item mew-imap-auth
@@ -11548,9 +11648,11 @@ The name of your IMAP server.
 @item mew-imap-ssh-server
 The name of SSH server which forwards the IMAP4 port.
 @item mew-imap-ssl
-If non-nil, IMAP connections are made over SSL.
+If non-nil, IMAP connections are made over TLS.
+@samp{'native} enables GnuTLS for native TLS connection
+and @samp{'tunnel} uses stunnel to establish a TLS tunnel.
 @item mew-imap-ssl-port
-The port for IMAP over SSL.
+The port for IMAP over TLS.
 @item mew-imap-user
 The user name on the IMAP server. The default is your login name.
 @item mew-imap-auth
@@ -11567,7 +11669,7 @@ messages. If number N, delete the messages N days after the first
 access. Otherwise they are not deleted. The default is @samp{t}.
 @item mew-imap-size
 The limit size of messages to be retrieved by IMAP. The default is 55296
-byte. 0 means unlimited, so you can get all messages from the IMAP
+bytes. 0 means unlimited, so you can get all messages from the IMAP
 server. To know how to retrieve the rest of a truncated message, please
 refer to @ref{retrieving}.
 @item mew-imap-header-only
@@ -11601,9 +11703,11 @@ NNTP サーバの名前。
 @item mew-nntp-ssh-server
 NNTP を SSH 経由で取得する場合の SSH サーバの名前。
 @item mew-nntp-ssl
-NNTP over SSL を使うか否か。
+NNTP over TLS を使うか否か。@samp{'native} は GnuTLS
+を使った TLS 接続、@samp{'tunnel} は stunnel
+を使った TLS トンネル接続を意味する。
 @item mew-nntp-ssl-port
-NNTP over SSL のポート番号。
+NNTP over TLS のポート番号。
 @item mew-nntp-user
 NNTP のアカウント名。もし @samp{nil} でなければ、認証の手続きが実行され
 る。(mew-nntp-auth という変数はないことに注意。)
@@ -11632,9 +11736,11 @@ The name of your NNTP server.
 @item mew-nntp-ssh-server
 The name of SSH server which forwards the NNTP port.
 @item mew-nntp-ssl
-If non-nil, NNTP connections are made over SSL.
+If non-nil, NNTP connections are made over TLS.
+@samp{'native} enables GnuTLS for native TLS connection
+and @samp{'tunnel} uses stunnel to establish a TLS tunnel.
 @item mew-nntp-ssl-port
-The port for NNTP over SSL.
+The port for NNTP over TLS.
 @item mew-nntp-user
 The user name on the NNTP server. If non-nil, authentication is used.
 (Note that mew-nntp-auth does not exist.)
@@ -11642,11 +11748,11 @@ The user name on the NNTP server. If non-nil, authentication is used.
 The name of default Newsgroup.
 @item mew-nntp-size
 The limit size of messages to be retrieved by NNTP. The default is 55296
-byte. 0 means unlimited, so you can get all messages from the NNTP
+bytes. 0 means unlimited, so you can get all messages from the NNTP
 server.
 @item mew-nntp-header-only
 Whether or not the body of a message is retrieved by NNTP. If non-nil,
-only header is retrieved.
+only header is retrieved. The default is @samp{nil}.
 @item mew-nntp-msgid-user
 A user name for creation of Message-Id:. If @samp{nil}, the value of
 @samp{mew-user} is used. The default is @samp{nil}.
@@ -11699,9 +11805,11 @@ SMTP サーバと接続する際に用いるアドレスファミリ。初期値
 @item mew-smtp-ssh-server
 SSH 経由でメッセージを送る際の SSH サーバの名前。
 @item mew-smtp-ssl
-SMTP over SSL を使うか否か。
+SMTP over TLS を使うか否か。@samp{'native} は GnuTLS
+を使った TLS 接続、@samp{'tunnel} は stunnel
+を使った TLS トンネル接続を意味する。
 @item mew-smtp-ssl-port
-SMTP over SSL のポート番号。
+SMTP over TLS のポート番号。
 @item mew-smtp-user
 SMTP AUTH で利用されるアカウント名。設定されない場合は、自動的にメール
 アドレスに設定される。
@@ -11736,9 +11844,11 @@ The address family to be used for the SMTP server.  The default value is 'ipv4.
 @item mew-smtp-ssh-server
 The name of SSH server which forwards the SMTP port.
 @item mew-smtp-ssl
-If non-nil, SMTP connections are made over SSL.
+If non-nil, SMTP connections are made over TLS.
+@samp{'native} enables GnuTLS for native TLS connection
+and @samp{'tunnel} uses stunnel to establish a TLS tunnel.
 @item mew-smtp-ssl-port
-The port for SMTP over SSL.
+The port for SMTP over TLS.
 @item mew-smtp-user
 The user name on your SMTP server. If not configured, your e-mail
 address is automatically set.
@@ -11749,8 +11859,9 @@ Currently, "CRAM-MD5", "PLAIN", and "LOGIN" can be used.
 An e-mail domain to tell a SMTP server with HELO/EHLO. The default is
 "localhost".
 @item mew-smtp-mail-from
-The default is @samp{nil}. An e-mail address to tell a SMTP server with
+An e-mail address to tell a SMTP server with
 MAIL FROM:. If @samp{nil}, an address specified by the From: field is used.
+The default is @samp{nil}.
 @item mew-smtp-msgid-user
 A user name for creation of Message-Id:. If @samp{nil}, the value of
 @samp{mew-user} is used. The default is @samp{nil}.
@@ -11814,10 +11925,10 @@ configure as follows:
 @end lisp
 
 @ifset ja
-SSL (@xref{SSL})や TLS (@xref{TLS}) の章も参考にして下さい。
+TLS/SSL (@xref{TLS/SSL}) の章も参考にして下さい。
 @end ifset
 @ifset en
-Please refer also to SSL (@pxref{SSL}) and TLS (@pxref{TLS}).
+Please refer also to TLS/SSL (@pxref{TLS/SSL}).
 @end ifset
 
 @ifset ja
@@ -11953,7 +12064,7 @@ chosen according to the value of the "case".
 @w{"}$inbox"、"%inbox"、"-fj.mail.reader.mew" を意味します。
 @end ifset
 @ifset en
-Candidates of the value are "+", "$", "%", and "-". These means
+Candidates of the value are "+", "$", "%", and "-". These mean
 @w{"}+inbox", "$inbox", "%inbox", and "-fj.mail.reader.mew" without
 any special configuration.
 @end ifset
@@ -11986,7 +12097,7 @@ imap-proxy-server, imap-proxy-port,
 nntp-server, nntp-port, nntp-ssh-server, nntp-ssl, nntp-ssl-port, 
 nntp-user, nntp-size, nntp-header-only, 
 nntp-msgid-user, nntp-msgid-domain, 
-ssl-cert-directory, ssl-verify-level, 
+prog-ssl-arg, ssl-cert-directory, ssl-verify-level, 
 inbox-folder, queue-folder, postq-folder, 
 mailbox-type, mbox-command, mbox-command-arg,
 signature-file, content-type, refile-guess-alist, 
@@ -12074,7 +12185,7 @@ Draft モードにおいて、その草稿のケースを変更するには、@s
 @end ifset
 @ifset en
 To change the "case" of a draft in Draft mode, use @samp{C-cC-o}. Its
-header is dynamically modified according to the value of the
+header is dynamically modified according to the values of the
 'mail-domain' key and the 'header-alist' key. Note that the "case" is
 a local variable of the Draft mode.
 @end ifset
@@ -12350,8 +12461,10 @@ configure as follows:
 * region::                      リージョン
 * visiting::                    移動
 * SSH::                         Secure SHell
-* SSL::                         Secure Socket Layer
-* TLS::                         Transport Layer Security
+* TLS/SSL::                     Transport Layer Security / Secure Socket Layer
+* Stunnel::                     Stunnel を使った TLS 接続
+* GnuTLS::                      GnuTLS ライブラリを使った TLS 接続
+* TLS/SSL2::                    TLS 接続のための変数設定
 * spam::                        スパム
 * spam2::                       スパム(2)
 * addr-warn::                   アドレスの警告
@@ -12362,8 +12475,10 @@ configure as follows:
 * region::                      Region
 * visiting::                    Visiting another buffer
 * SSH::                         Secure SHell
-* SSL::                         Secure Socket Layer
-* TLS::                         Transport Layer Security
+* TLS/SSL::                     Transport Layer Security / Secure Socket Layer
+* Stunnel::                     TLS by Stunnel
+* GnuTLS::                      TLS by GnuTLS library
+* TLS/SSL2::                    Configuration Variables for TLS
 * spam::                        Spam messages
 * spam2::                       Spam messages (2)
 * addr-warn::                   Warning addresses
@@ -12472,7 +12587,7 @@ name is the smallest number, type @samp{C-cC-o}.
 @end ifset
 
 @c %%%%%%%%%%%%%%%%%
-@node SSH, SSL, visiting, Tips
+@node SSH, TLS/SSL, visiting, Tips
 @ifset ja
 @section Secure SHell
 @end ifset
@@ -12494,7 +12609,7 @@ Mew supports SSH version 1 and version 2 and OpenSSH for SSH. You must
 execute "ssh" on the command and obtain server's public key before you
 use Mew with SSH. That is, you should set up so that you can login the
 server with your user password or with the password to decrypt the
-secret key of the local machine. Of source, you can omit the password
+secret key of the local machine. In addition, you can omit the password
 to decrypt the secret key if you use "ssh-agent".
 @end ifset
 
@@ -12518,51 +12633,99 @@ in the mode line.
 @end ifset
 
 @ifset ja
-Mew の実装では、SSH と SSL/TLS を同時には使えません。SSH トンネルの中で
-SSL/TLS を使う必要がある場合、Mew では SSL/TLS だけを設定し、SSH トンネ
+Mew の実装では、SSH と TLS を同時には使えません。SSH トンネルの中で
+TLS を使う必要がある場合、Mew では TLS だけを設定し、SSH トンネ
 ルはコマンドラインから張るようにして下さい。
 @end ifset
 @ifset en
-The implementation of Mew does not allow to use both SSH and SSL/TLS
-at the same time. If you need to use SSL/TLS over an SSH tunnel,
-please configure SSL/TLS only with Mew and set up an SSH tunnel on a
+The implementation of Mew does not allow to use both SSH and TLS
+at the same time. If you need to use TLS over an SSH tunnel,
+please configure TLS only with Mew and set up an SSH tunnel on a
 command line.
 @end ifset
 
 @c %%%%%%%%%%%%%%%%%
-@node SSL, TLS, SSH, Tips
+@node TLS/SSL, Stunnel, SSH, Tips
 @ifset ja
-@section Secure Socket Layer
+@section Transport Layer Security / Secure Socket Layer
 @end ifset
 @ifset en
-@section Secure Socket Layer
+@section Transport Layer Security / Secure Socket Layer
 @end ifset
-@vindex mew-ssl-cert-directory
-@vindex mew-ssl-verify-level
-@vindex mew-pop-ssl
-@vindex mew-pop-ssl-port
-@vindex mew-smtp-ssl
 
 @ifset ja
-SSL を使うには、認証局方式の信用モデルを理解している必要があります。現
-在、Mew は SSL のために "stunnel" バージョン 3、4、5 をサポートしていま
+Mew は、通信の秘匿性と完全性を保証するために、TCP 通信路を暗号化する
+TLS (Transport Layer Security) に対応しています。この機能を使うには、
+Emacs に GnuTLS ライブラリが組み込まれているか、外部プログラムとして
+"stunnel" バージョン 5.15以降が必要です。
+@end ifset
+@ifset en
+Mew supports TLS (Transport Layer Security) for confidentiality and
+integrity of TCP transport.  To use this feature, Emacs built with
+GnuTLS library or a ``stunnel'' program version 5.15 or later is required.
+@end ifset
+
+@ifset ja
+TLS プロトコルは、Netscape Communications 社が 1990 年代に開発した SSL
+(Secure Socket Layer) の後継として規格化されたものです。
+2 つのプロトコルには互換性があり、
+GnuTLS や ``stunnel'' プログラムは TLS と SSL の両方に対応しています。
+しかし、2020 年の時点で SSL には多数の脆弱性が発見されており、
+SSL の使用は避けて TLS のみを使用すべきだと考えられています。
+@end ifset
+@ifset en
+SSL (Secure Socket Layer) was developed by Netscape Communications,
+Inc. back in 1990s and TLS has been developed as the successor.  While
+these two protocols are compatible with each other in some degree, and
+GnuTLS and ``stunnel'' support the both, as of 2020, SSL is considered
+as a ``should not use'' protocol because a lot of security flaws were
+found in the protocol.
+@end ifset
+
+@ifset ja
+TLS 機能の設定に用いる Mew の設定変数や関数の名前には、 ``ssl'' が含ま
+れているものがあります。混乱しやすいですが、このような歴史的な理由によ
+るものです。
+@end ifset
+@ifset en
+For this histrical reason, there are still variables and functions for
+TLS functionality with ``ssl'' keyword in Mew.
+@end ifset
+
+@ifset ja
+TLS を有効にするには、stunnel もしくは GnuTLS ライブラリのための変数を
+設定し、次に各プロトコルについて TLS を有効にするかどうかの設定をしま
 す。
 @end ifset
 @ifset en
-Before you use SSL, you should understand the trust model of
-certificate authorities (CA). Currently, Mew supports "stunnel" version
-3, 4 and 5 for SSL.
+To enable TLS functionality, you have to configure variables for
+``stunnel'' program or GnuTLS library, and then ones for enabling TLS
+of each supported protocols.
 @end ifset
 
+@c %%%%%%%%%%%%%%%%%
+@node Stunnel, GnuTLS, TLS/SSL, Tips
 @ifset ja
-Mew で利用する前に、SSL サーバに対して "stunnel" で SSL のコネクション
-が張れるか確かめて下さい。"stunnel" は、"openssl" のライブラリをリンク
-しているので、"openssl" の知識が必要です。
+@section Stunnel を使った TLS 接続
 @end ifset
 @ifset en
-Before you use Mew with SSL, you must be sure that an SSL connection
-can be established to your SSL server. Since "stunnel" is linked to
+@section TLS by Stunnel
+@end ifset
+@vindex mew-ssl-cert-directory
+@vindex mew-ssl-verify-level
+
+@ifset ja
+Mew で利用する前に、TLS サーバに対して "stunnel" で TLS のコネクション
+が張れるか確かめて下さい。"stunnel" は、"openssl" のライブラリをリンク
+しているので、"openssl" の知識が必要です。
+また、TLS を使うには、認証局方式の信用モデルを理解している必要があります。
+@end ifset
+@ifset en
+Before you use Mew with TLS, you must be sure that an TLS connection
+can be established to your TLS server. Since "stunnel" is linked to
 the "openssl" library, you should understand "openssl".
+Before you use TLS, you should understand the trust model of
+certificate authorities (CA).  
 @end ifset
 
 @ifset ja
@@ -12573,7 +12736,7 @@ the "openssl" library, you should understand "openssl".
 @ifset en
 Suppose we use "~/.certs" as a directory where certificates of trusted
 CAs are contained. You need to copy PEM-format certificates embedded
-in the source of "openssl" to this director. Each name should be
+in the source of "openssl" to this directory. Each name should be
 @w{"}<hash>.0".
 @end ifset
 
@@ -12604,18 +12767,20 @@ To copy the certificate, do as follows:
 @ifset ja
 "openssl" に付いてくる証明書は、世の中で使われている CA すべてを網羅で
 きていません。あなたが利用するサーバの証明書が、他の CA から発行された
-場合、その CA の証明書を同様にコピーしておく必要があります。以下のペー
-ジに CA の証明書がたくさん置いてあります。
+場合、その CA の証明書を同様にコピーしておく必要があります。インターネッ
+トにおいて信頼されている CA の証明書は、次の URLで管理・公開されていま
+す。
 @end ifset
 @ifset en
 The certificates in the source of "openssl" do not cover all CAs. If
-the certificate of your SSL server is signed by another CA, you must
-copy the certificate of the CA to the directory. You may be able to
-find appropriate certificate from the following page:
+the certificate of your TLS server is signed by another CA, you must
+copy the certificate of the CA to the directory. You can find trusted
+CA certificates on Internet from the following URLs:
 @end ifset
 
 @example
-http://www.columbia.edu/~ariel/good-certs/ns45/
+https://www.ccadb.org
+https://www.mozilla.org/en-US/about/governance/policies/security-group/certs/
 @end example
 
 @ifset ja
@@ -12628,7 +12793,7 @@ Mew で "stunnel" を制御する重要な変数は 2 つです。
 @ifset en
 There are two important Mew variables to control "stunnel".
 @samp{mew-ssl-cert-directory} is the directory where you install
-certificates of trusted CAs. It's default value if "~/.certs". Also,
+certificates of trusted CAs. Its default value is "~/.certs". Also,
 you can set the verification level with @samp{mew-ssl-verify-level}.
 It's default to 1. The meanings of the values are as follows:
 @end ifset
@@ -12638,11 +12803,11 @@ It's default to 1. The meanings of the values are as follows:
 @item 0
 検証しない
 @item 1
-サーバの証明書があれば検証する。検証結果が失敗なら、SSL/TSL コネクショ
-ンは作られない。証明書がなければ、SSL/TLS コネクションを作成する。
+サーバの証明書があれば検証する。検証結果が失敗なら、TLS コネクショ
+ンは作られない。証明書がなければ、TLS コネクションを作成する。
 @item 2
-サーバの証明書を検証する。検証結果が失敗なら、SSL/TSL コネクションは作
-られない。証明書がなければ、SSL/TLS コネクションを作成しない。
+サーバの証明書を検証する。検証結果が失敗なら、TLS コネクションは作
+られない。証明書がなければ、TLS コネクションを作成しない。
 @item 3
 サーバが送ってきたものではなく、ローカルにインストールされている証明書
 で検証する。
@@ -12652,11 +12817,11 @@ It's default to 1. The meanings of the values are as follows:
 No verification.
 @item 1
 Verify server's certificate if present. If verification failed, an
-SSL/TLS connection is not created. If not present, an SSL/TLS
+TLS connection is not created. If not present, a TLS
 connection is created.
 @item 2
-Verify server's certificate. If verification failed, an SSL/TLS
-connection is not created. If not present, an SSL/TLS connection is
+Verify server's certificate. If verification failed, a TLS
+connection is not created. If not present, a TLS connection is
 not created.
 @item 3 
 Verify server's certificate which locally installed (not one from the
@@ -12665,14 +12830,186 @@ server).
 @end table
 
 @ifset ja
-後は各プロトコルの SSL に関する変数を設定して下しさい。たとえば、POP
-over SSL を利用するには、@samp{mew-pop-ssl} を @samp{t} にします。また、
+変数を設定したら、stunnel を使う準備は完了です。
+@end ifset
+@ifset en
+You can get started with using stunnel after configuring the
+variables.
+@end ifset
+
+@c %%%%%%%%%%%%%%%%%
+@node GnuTLS, TLS/SSL2, Stunnel, Tips
+@ifset ja
+@section GnuTLS ライブラリを使った TLS 接続
+@end ifset
+@ifset en
+@section TLS by GnuTLS Library
+@end ifset
+@vindex mew-ssl-trustfiles
+@vindex mew-ssl-verify-level
+@vindex gnutls-verify-error
+@vindex network-security-level
+
+@ifset ja
+GnuTLS が組み込まれた Emacs を使っている場合、TLS 機能を有効にするため
+の特別な設定は不要です。次の変数を設定することで、証明書の検証レベルと
+信頼するルート CA を変更することができます。
+@end ifset
+@ifset en
+Mew requires no specific configuration to support TLS if you are using
+an Emacs built with GnuTLS library.  You can configure the certificate
+verification level and trusted root CAs by using the following
+variables.
+@end ifset
+
+@ifset ja
+証明書の検証レベルは、Emacs の Network Security Manager(NSM) によって
+管理されているポリシーに従います。ポリシーを設定するには、
+@samp{network-security-level} という変数を使います。デフォルト値は
+@samp{'medium} です。@samp{'low} の場合、証明書を検証しません。
+@samp{'medium} の場合、ルート CA の証明書リストを使って証明書を検証し
+ます。検証ができなかった場合、もしくは自己署名証明書だった場合、その証
+明書を受け入れるかどうかのダイアログが表示されます。また、今まで証明書
+を使って暗号路で通信していたサーバに対して、暗号化なしで接続しようとし
+た場合にも、警告を表示します。@samp{'high} とすると、@samp{'medium} の
+チェックに加えて、サーバ証明書の鍵の変更や弱い暗号スイートの使用に関し
+て警告が表示されます。詳しくは、@xref{(emacs)Network Security} を参照
+して下さい。
+@end ifset
+@ifset en
+The policy for verification of the server certificates is handled by
+Emacs Network Security Manager (NSM).  It is configured by
+@samp{network-security-level}, and the default value is
+@samp{'medium}.  If it is set to @samp{'low}, no verification is
+performed.  If @samp{'medium}, NSM will check whether the certificate
+used to establish the identity of the server we're connecting to can
+be verified by using the specified root CA list.  A dialog for
+choosing whether the certificate should be accepted or not will be
+displayed if it is an invalid certificate including self-signed one.
+Also, if the connection is unencrypted, but it was encrypted in
+previous sessions, a similar dialog will be displayed.  @samp{'high}
+will perform additional checks such as a validated certificate which
+changes the public key and weak cipher/protocols.  For more details,
+see @xref{(emacs)Network Security}.
+@end ifset
+
+@ifset ja
+GnuTLS を使う場合は前述のとおり @samp{network-security-level} を設定す
+ることが推奨されます。一方で Mew は、Stunnel を用いた TLS 接続について、
+@samp{mew-ssl-verify-level} という変数を用いて証明書の検証レベルを設定
+していました。この変数で設定した場合との後方互換性を保つため、Mew は
+@samp{mew-ssl-verify-level} が @samp{0} の場合のみ、
+@samp{network-security-level} を @samp{'low} に自動設定します。
+この自動設定は、 Mew による接続のみに影響します。
+@samp{mew-ssl-verify-level} のデフォルト値は @samp{1} となっています。
+@samp{0} 以外の値の場合は、@samp{network-security-level} の設定に変更
+が加えられることはありません。
+@end ifset
+@ifset en
+It is recommended to use @samp{network-security-level} to specify the
+verification level when using GnuTLS.  However, Mew traditionally used
+@samp{mew-ssl-verify-level} variable to specify the verification level
+for Stunnel program.  To keep backward compatibility with it,
+@samp{network-security-level} will be temporarily set to @samp{'low}
+if and only if @samp{mew-ssl-verify-level} is @samp{0}.  Note that the
+default value of @samp{mew-ssl-verify-level} is @samp{1} and there
+will be no change with @samp{network-security-level} when
+@samp{mew-ssl-verify-level} is not @samp{0}.
+@end ifset
+
+@ifset ja
+GnuTLS には、証明書の検証方法を制御するための
+@samp{gnutls-verify-error} という変数もあります。GnuTLS は TCP 接続の
+確立時に証明書を検証します、この変数は、検証に失敗した時に切断するかど
+うかを制御します。デフォルトでは @samp{nil} に設定されており、検証に失
+敗してもすぐには切断しません。前述の Network Security Managerが、TCP
+接続の確立後に検証し、切断するかどうかを決定します。すぐに切断しない設
+定がデフォルトとなっていることは奇妙に思われるかも知れませんが、Emacs
+で GnuTLS が標準的な検証よりも多くの項目を検査できるようにするため、
+TCP 接続と検証処理を分離しています。
+@end ifset
+@ifset en
+GnuTLS has own variable, @samp{gnutls-verify-error}, to configure the
+verification level.  This variable controls if the TCP connection must
+be disconnected or not if verification of the server certificates
+failed upon the connection established.  The default value is
+@samp{nil}, which means connection will not be closed immediately even
+when the verification fails.  In this case, NSM will perform the
+verification and decides whether the connection should be disconnected
+or not.  You might think it is a bit odd that the default value of
+this variable is set to @samp{nil}.  This is because Emacs itself will
+check more details of the certificates and the connection than GnuTLS
+does.  For this reason, establishing a TCP connection and decision on
+disconnect are separated.
+@end ifset
+
+@ifset ja
+@samp{gnutls-verify-error} を手動で設定した場合、TCP 接続の確立時に証
+明書の検証に失敗すると、すぐに接続が切断されます。NSM は検証しません。
+この場合、@samp{network-security-level} や@samp{mew-ssl-verify-level}
+による設定は無効になりますので注意して下さい。特別な理由がない限り、
+@samp{gnutls-verify-error} ではなく@samp{network-security-level} を使っ
+て設定することをお勧めします。
+@end ifset
+@ifset en
+If you set @samp{gnutls-verify-error} manually, GnuTLS will terminate
+the TCP session when the verification of the server certificates
+fails.  In this case, no further verification by NSM will be
+performed.  Note that configurations by using
+@samp{network-security-level} or @samp{mew-ssl-verify-level} will be
+ignored in this case.  It is recommended to use
+@samp{network-security-level} over @samp{gnutls-verify-error} unless
+you have a specific reason.
+@end ifset
+
+@ifset ja
+信頼するルート CA は、@samp{mew-ssl-trustfiles} の設定に従います。ただし、
+GnuTLS には通常、デフォルトのルート CA リストが設定されており、Emacs
+26.3 とそれより前のバージョンでは、それが常に先頭に追加されます。リス
+トを空にしても、デフォルトのリストを無視できないことに注意してください。
+@end ifset
+@ifset en
+The trusted root CA list can be specified in
+@samp{mew-ssl-trustfiles}.  However, GnuTLS has the default list of
+the trusted files and they are always used first on Emacs version 26.3
+and prior.  Note that you cannot disable them even if you set an empty
+list to the variable.
+@end ifset
+
+@c %%%%%%%%%%%%%%%%%
+@node TLS/SSL2, spam, GnuTLS, Tips
+@ifset ja
+@section TLS 接続のための変数設定
+@end ifset
+@ifset en
+@section Configuration Variables for TLS
+@end ifset
+@vindex mew-ssl-default
+@vindex mew-pop-ssl
+@vindex mew-pop-ssl-port
+@vindex mew-smtp-ssl
+@vindex mew-smtp-ssl-port
+@vindex mew-nntp-ssl
+@vindex mew-nntp-ssl-port
+
+@ifset ja
+次に各プロトコルの TLS に関する変数を設定して下さい。たとえば、POP
+over TLS を利用するには、@samp{mew-pop-ssl} を @samp{t} にします。
+TLS の実装として stunnel もしくは GnuTLS を明示的に指定したい場合は、
+それぞれ @samp{'tunnel}, @samp{'native} を指定します。
+@samp{t} を設定したプロトコルについては、
+@samp{mew-ssl-default} を使って使用する実装を選択することが可能です。
+また、
 ポート番号が標準と異なる場合には、@samp{mew-pop-ssl-port} を設定して下
 さい。
 @end ifset
 @ifset en
-Then configure SSL-related variables of each protocol. For example, if
-you want to use POP over SSL, set @samp{mew-pop-ssl} to @samp{t}.
+Then configure TLS-related variables of each protocol. For example, if
+you want to use POP over TLS, set @samp{mew-pop-ssl} to @samp{t}.
+To specify the TLS implementation, @samp{'tunnel} or @samp{'native}
+can be used instead of @samp{t} for stunnel or GnuTLS, respectively.
+For protocols with @samp{t}, the value of @samp{mew-ssl-default}
+is used as the default TLS implementation.
 Also, if its port is not a standard one, configure
 @samp{mew-pop-ssl-port}.
 @end ifset
@@ -12682,10 +13019,10 @@ Also, if its port is not a standard one, configure
 @end lisp
 
 @ifset ja
-SMTP で SSL を利用する場合は、以下のようにします。
+SMTP で TLS を利用する場合は、以下のようにします。
 @end ifset
 @ifset en
-To use SSL for SMTP, configure as follows:
+To use TLS for SMTP, configure as follows:
 @end ifset
 
 @lisp
@@ -12693,62 +13030,46 @@ To use SSL for SMTP, configure as follows:
 @end lisp
 
 @ifset ja
-SSL で通信が保護されている場合、モードラインに錠前の絵が表示されます。
+TLS で通信が保護されている場合、モードラインに錠前の絵が表示されます。
 @end ifset
 @ifset en
-While a connection is protected by SSL, a picture of a lock is shown
+While a connection is protected by TLS, a picture of a lock is shown
 in the mode line.
 @end ifset
 
-@c %%%%%%%%%%%%%%%%%
-@node TLS, spam, SSL, Tips
 @ifset ja
-@section Transport Layer Security
+Mew では、各プロトコルの STARTTLS 拡張を使い、TCP 接続の確立後に
+TLS を有効にすることもできます。STARTTLS を利用したい場合、ますは
+@xref{TLS/SSL} の説明に従って設定して下さい。
 @end ifset
 @ifset en
-@section Transport Layer Security
+Mew can upgrade a plain TCP connection to a TLS connection by using
+STARTTLS extension in each supported protocols.  Before using this,
+you have to configure variables according to @ref{TLS/SSL}.
 @end ifset
 
 @ifset ja
-Mew では SSL の代りに TLS を利用することもできます。TLS の実現は、SSL
-と同様 "stunnel" に頼っています。ですので、TLS を利用する際には、
-@xref{SSL} の説明に従って設定して下さい。
+STARTTLS は、プロトコルの通常のポート番号と TLS 用のポート番号とを
+一致するように設定することで有効になります。たとえば、POP では以下のよ
+うにします。
 @end ifset
 @ifset en
-Mew can use TLS instead of SSL. To enable TLS, Mew relies on
-@w{"}stunnel", too. So, before using TLS, you should configure
-according to the explanations in @ref{SSL}.
-@end ifset
-
-@ifset ja
-次に、SSL のポート番号を守りたいプロトコルと同じポート番号に設定します。
-たとえば、POP では以下のようにします。
-@end ifset
-@ifset en
-Then, set the SSL port to the same one of the protocol to be
-protected. For instance, configure as follows for POP:
+STARTTLS will be enabled when the port number for normal TCP
+connections of the protocol is set to the same as the port number for
+TLS connections.  Configure as follows for POP, for instance:
 @end ifset
 
 @lisp
-;; mew-pop-port is default to "pop3" (110)
+;; A default value of mew-pop-port is "pop3" (110)
 (setq mew-pop-ssl t)
 (setq mew-pop-ssl-port mew-pop-port) ;; The default is "pop3s" (995)
 @end lisp
 
 @ifset ja
-すなわち、SSL のポート番号と保護したいプロトコルのポートが同じであれば
-TLS、異なれば SSL が利用されます。
+以下は、Message Submission で STARTTLS を有効にするための設定例です。
 @end ifset
 @ifset en
-That is, if the SSL port is the same as the port of the protocol to be
-protected, TLS is used. Otherwise, SSL is used.
-@end ifset
-
-@ifset ja
-以下は、Message Submission を TLS で守るための設定例です。
-@end ifset
-@ifset en
-The following is an example to protect Message Submission with TLS.
+The following is an example to enable STARTTLS for Message Submission.
 @end ifset
 
 @lisp
@@ -12758,7 +13079,7 @@ The following is an example to protect Message Submission with TLS.
 @end lisp
 
 @c %%%%%%%%%%%%%%%%%
-@node spam, spam2, TLS, Tips
+@node spam, spam2, TLS/SSL2, Tips
 @ifset ja
 @section スパム
 @end ifset
@@ -12810,7 +13131,7 @@ If you use "bogofilter", put the following to your "~/.mew.el".
 @end ifset
 @ifset en
 If you want to put the @samp{o} mark so as to be refiled to the +spam
-folder, instead of putting to th @samp{D} mark, you should program the
+folder, instead of putting to the @samp{D} mark, you should program the
 function as follows:
 @end ifset
 
@@ -12911,7 +13232,7 @@ with @samp{md} + @samp{x}.
 @end ifset
 @ifset en
 (4) In the case where you use POP and a spam filter does not run on
-the POP server but you want to mark spam messages when retrieving
+the POP server but you want to mark spam messages when retrieving.
 @end ifset
 
 @ifset ja
@@ -12962,14 +13283,14 @@ We consider bogofilter as an example and see three cases.
 (1) ローカルのフィルターに学習させる場合：
 @end ifset
 @ifset en
-(2) To let your local filter learn:
+(1) To let your local filter learn:
 @end ifset
 
 @lisp
 (setq mew-spam-prog "bogofilter")
 (setq mew-spam-prog-args '("-s" "-N" "-v"))
 (setq mew-ham-prog "bogofilter")
-(setq mew-ham-prog-args '("-n" "-S" "-v")))
+(setq mew-ham-prog-args '("-n" "-S" "-v"))
 @end lisp
 
 @ifset ja
@@ -12983,7 +13304,7 @@ We consider bogofilter as an example and see three cases.
 (setq mew-spam-prog "ssh")
 (setq mew-spam-prog-args '("<server>" "bogofilter" "-s" "-N" "-v"))
 (setq mew-ham-prog "ssh")
-(setq mew-ham-prog-args '("<server>" "bogofilter" "-n" "-S" "-v")))
+(setq mew-ham-prog-args '("<server>" "bogofilter" "-n" "-S" "-v"))
 @end lisp
 
 @ifset ja
@@ -12999,7 +13320,7 @@ your <server> learn via SSH:
 (setq mew-spam-prog "ssh")
 (setq mew-spam-prog-args '("-A" "<firewall>" "ssh" "<server>" "bogofilter" "-s" "-N" "-v"))
 (setq mew-ham-prog "ssh")
-(setq mew-ham-prog-args '("-A" "<firewall>" "ssh" "<server>" "bogofilter" "-n" "-S" "-v")))
+(setq mew-ham-prog-args '("-A" "<firewall>" "ssh" "<server>" "bogofilter" "-n" "-S" "-v"))
 @end lisp
 
 @ifset ja
@@ -13285,7 +13606,7 @@ Saving the edited message to a new message.
 @item C-cC-m
 The same as @samp{C-cC-c}
 @item Other commands
-The same as the other commands in Edit mode
+The same as the other commands in Draft mode
 @end ifset
 @end table
 
@@ -13565,7 +13886,7 @@ http://www.mew.org/en/git/
 Mew に関するメーリングリストについては、以下を参照して下さい。
 
 @example
-https://groups.google.com/forum/#!forum/mew-ja
+https://groups.google.com/g/mew-ja
 @end example
 @end ifset
 
@@ -13575,7 +13896,7 @@ and/or discuss features in English,
 please subscribe yourself to mew-en.
 
 @example
-https://groups.google.com/forum/#!forum/mew-en
+https://groups.google.com/g/mew-en
 @end example
 @end ifset
 
@@ -13594,7 +13915,7 @@ https://groups.google.com/forum/#!forum/mew-en
 @ifset ja
 Mew は以下の著作権に従います。
 
-Copyright (C) 1994-2018 Mew developing team.@*
+Copyright (C) 1994-2023 Mew developing team.@*
 All rights reserved.
 
 変更の有無にかかわらず、ソースおよびバイナリ形式の再配布および利用は、以
@@ -13627,7 +13948,7 @@ All rights reserved.
 @ifset en
 Mew conforms the following copyright.
 
-Copyright (C) 1994-2018 Mew developing team.@*
+Copyright (C) 1994-2023 Mew developing team.@*
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

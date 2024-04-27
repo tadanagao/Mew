@@ -1,7 +1,7 @@
 /*
  * mewl -- Message scanner for Mew 4 or later
  *
- * Author:  Kazu Yamamoto <Kazu@Mew.org>
+ * Author:  Mew developing team
  * Created: Jul  7, 2000
  *
  * Code:
@@ -9,7 +9,7 @@
 
 #include "mew.h"
 
-private char version_message[] = "version 6.8 20180607 Kazu Yamamoto";
+private char version_message[] = "version 6.9 20230210 Mew developing team";
 
 #ifdef HAVE_UNISTD_H
 # include <sys/types.h>
@@ -834,7 +834,7 @@ exec_init(unsigned int num) { /* num == 0 */
 	ch_folder(Current_folder);
 
 	if (pipe(pipes) != 0) warn_exit("can't open pipe.");
-	childpid = FORK();
+	childpid = fork();
 	if (childpid < 0) warn_exit("can't fork.");
 
 	if (childpid == 0) { /* I'm the child. */

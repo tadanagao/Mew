@@ -1,7 +1,7 @@
 /*
  * mew.h
  *
- * Author:  Kazu Yamamoto <Kazu@Mew.org>
+ * Author:  Mew developing team
  * Created: Jul  7, 2000
  * Revised: Jul 10, 2001
  *
@@ -117,13 +117,6 @@
 # elif defined(HAVE_POLL)
 #  define usleep(x) poll(0, 0, (x)/1000)
 # endif
-#endif
-
-#ifdef HAVE_VFORK
-# define FORK()	vfork()
-# define HAVE_FORK 1
-#elif defined(HAVE_FORK)
-# define FORK()	fork()
 #endif
 
 /*
