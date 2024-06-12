@@ -320,8 +320,8 @@
 
 (defun mew-smtp-command-auth-xoauth2 (pro pnm)
   (let* ((user (mew-smtp-get-auth-user pnm))
-         (token (mew-auth-oauth2-token-access-token))
-         (auth-string (mew-auth-xoauth2-auth-string user token)))
+	 (tag (mew-smtp-passtag pnm))
+         (auth-string (mew-xoauth2-auth-string user tag)))
     (mew-smtp-process-send-string pro "AUTH XOAUTH2 %s" auth-string)
     (mew-smtp-set-status pnm "auth-xoauth2")))
 
