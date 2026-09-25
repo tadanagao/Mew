@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; mew-pgp.el --- PGP/MIME for Mew
 
 ;; Author:  Mew developing team
@@ -59,8 +60,8 @@ Set 1 if 5. Set 2 if 6. Set 3 if GNUPG. Set 4 if GNUPG2.")
   '(("+language=en" "+batchmode=off")
     ("+language=en" "+batchmode=off")
     ("+language=en" "+batchmode=off")
-    ("--decrypt")
-    ("--decrypt")))
+    ("--decrypt" "--status-fd" "1")
+    ("--decrypt" "--status-fd" "1")))
 
 (defvar mew-prog-pgps-arg ;; local binding
   '(("-sba" "+language=en" "+batchmode=off")
@@ -73,8 +74,8 @@ Set 1 if 5. Set 2 if 6. Set 3 if GNUPG. Set 4 if GNUPG2.")
   '(("+batchmode=on" "+language=en")
     ("+batchmode=on" "+language=en" "+force=on")
     ("+batchmode=on" "+language=en")
-    ("--verify" "--batch")
-    ("--verify" "--batch")))
+    ("--verify" "--batch" "--status-fd" "1")
+    ("--verify" "--batch" "--status-fd" "1")))
 
 (defconst mew-prog-old-pgpv-arg
   '(("+batchmode=on" "+language=en")
@@ -134,7 +135,9 @@ Set 1 if 5. Set 2 if 6. Set 3 if GNUPG. Set 4 if GNUPG2.")
     "Enter pass phrase: "
     "Enter pass phrase: "
     "Enter passphrase: "
-    "Enter passphrase: "))
+    ;; GnuPG 2 asks over the command channel and says so on the status
+    ;; channel.  It never prints the prompt itself.
+    "\\[GNUPG:\\] GET_HIDDEN passphrase\\.enter\\|Enter passphrase: "))
 
 (defconst mew-pgp-msg-reenter-pass
   '("Enter pass phrase: "
@@ -322,6 +325,27 @@ Set 1 if 5. Set 2 if 6. Set 3 if GNUPG. Set 4 if GNUPG2.")
 (defun mew-pgp-passtag ()
   (mew-pgp-get mew-pgp-list))
 
+(defcustom mew-use-pgp-loopback-pinentry t
+  "*If non-nil, Mew asks for the passphrase itself and hands it to
+GnuPG 2 over its command channel.  If nil, GnuPG asks through its own
+pinentry program, which Mew cannot answer.
+
+Set this to nil if gpg-agent is told \"no-allow-loopback-pinentry\",
+where GnuPG refuses to start at all:
+
+	gpg: setting pinentry mode \='loopback\=' failed: Not supported"
+  :group 'mew-privacy
+  :type 'boolean)
+
+(defun mew-pgp-loopback-options (options)
+  "Add the loopback pinentry option to OPTIONS for GnuPG 2.
+Older programs ask on their own terminal, which Mew reads through a
+pty, so they need nothing here."
+  (if (and mew-use-pgp-loopback-pinentry
+	   (eq mew-pgp-ver mew-pgp-verg2))
+      (append options '("--pinentry-mode" "loopback"))
+    options))
+
 (defun mew-pgp-passphrase (&optional again)
   (let ((prompt (if again
 		    mew-pgp-prompt-reenter-pass
@@ -335,7 +359,8 @@ Set 1 if 5. Set 2 if 6. Set 3 if GNUPG. Set 4 if GNUPG2.")
 ;;; PGP verifying
 ;;;
 
-(defun mew-pgp-verify-check ()
+(defun mew-pgp-verify-check-text ()
+  ;; Used for PGP 2, 5 and 6, which have no status output.
   (let (ret keyid)
     (goto-char (point-min))
     (if (not (re-search-forward (mew-pgp-get mew-pgp-msg-signature) nil t))
@@ -390,6 +415,77 @@ Set 1 if 5. Set 2 if 6. Set 3 if GNUPG. Set 4 if GNUPG2.")
 	      (setq ret (concat ret " COMPLETE")))))))
     ret))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Reading the status output of GnuPG
+;;;
+
+;; GnuPG says not to parse what it prints for people: the wording
+;; changes between versions and part of it, the user id, comes from
+;; the key of whoever signed the message.  "--status-fd" is the
+;; interface meant for programs.  See "Format of the --status-fd
+;; output" in doc/DETAILS of the GnuPG distribution.
+
+(defconst mew-pgp-status-regex
+  ;; The output of a decryption comes through a pty, hence the CR.
+  "^\\[GNUPG:\\] \\([A-Z_]+\\)\\(?: \\([^\r\n]*\\)\\)?\r?$")
+
+(defun mew-pgp-gnupg-p ()
+  (memq mew-pgp-ver (list mew-pgp-verg mew-pgp-verg2)))
+
+(defun mew-pgp-status-get (key)
+  "Return the arguments of the first KEY line, \"\" if it has none.
+Return nil if there is no such line."
+  (save-excursion
+    (goto-char (point-min))
+    (catch 'found
+      (while (re-search-forward mew-pgp-status-regex nil t)
+	(if (string= (mew-match-string 1) key)
+	    (throw 'found (or (mew-match-string 2) "")))))))
+
+(defun mew-pgp-status-uid (args)
+  "Take the user id out of ARGS of a GOODSIG or BADSIG line.
+The key id comes first, then the user id."
+  (if (string-match "\\`[0-9A-Fa-f]+ \\(.*\\)\\'" args)
+      (concat "\"" (mew-match-string 1 args) "\"")
+    (concat "\"" args "\"")))
+
+(defun mew-pgp-status-trust ()
+  (cond
+   ((mew-pgp-status-get "TRUST_ULTIMATE")  " COMPLETE")
+   ((mew-pgp-status-get "TRUST_FULLY")     " COMPLETE")
+   ((mew-pgp-status-get "TRUST_MARGINAL")  " MARGINAL")
+   ((mew-pgp-status-get "TRUST_NEVER")     " UNTRUSTED")
+   ((mew-pgp-status-get "TRUST_UNDEFINED") " UNDEFINED")
+   (t "")))
+
+(defun mew-pgp-verify-check-status ()
+  "Read the result of a verification out of the status output.
+Return nil when the output says nothing about a signature, which is
+what happens for a message which is encrypted but not signed."
+  (let (args)
+    (cond
+     ((setq args (mew-pgp-status-get "GOODSIG"))
+      (concat "Good PGP sign " (mew-pgp-status-uid args) (mew-pgp-status-trust)))
+     ((setq args (mew-pgp-status-get "EXPKEYSIG"))
+      (concat "Good PGP sign " (mew-pgp-status-uid args) " EXPIRED"))
+     ((setq args (mew-pgp-status-get "REVKEYSIG"))
+      (concat "Good PGP sign " (mew-pgp-status-uid args) " REVOKED"))
+     ((setq args (mew-pgp-status-get "EXPSIG"))
+      (concat "Good PGP sign " (mew-pgp-status-uid args) " EXPIRED"))
+     ((setq args (mew-pgp-status-get "BADSIG"))
+      (concat "BAD PGP sign " (mew-pgp-status-uid args)))
+     ((setq args (mew-pgp-status-get "NO_PUBKEY"))
+      (concat mew-pgp-result-pubkey ": ID = 0x" args))
+     ((mew-pgp-status-get "ERRSIG")
+      mew-pgp-result-other)
+     (t nil))))
+
+(defun mew-pgp-verify-check ()
+  (if (mew-pgp-gnupg-p)
+      (mew-pgp-verify-check-status)
+    (mew-pgp-verify-check-text)))
+
 (defun mew-pgp-verify (file1 file2)
   (message "PGP verifying...")
   (let ((ioption (mew-pgp-get mew-prog-pgp-arg-input)) ;; detached signature
@@ -400,7 +496,11 @@ Set 1 if 5. Set 2 if 6. Set 3 if GNUPG. Set 4 if GNUPG2.")
       (if ioption
 	  (setq files (list ioption file1 file2))
 	(setq files (list file2 file1)))
-      (apply 'mew-call-process-lang pgpv nil t nil (append voptions files))
+      ;; Only the standard output, which carries the status lines, is
+      ;; kept.  What GnuPG writes for people is dropped so that it
+      ;; cannot be taken for a status line.
+      (apply 'mew-call-process-lang pgpv nil (list t nil) nil
+	     (append voptions files))
       (setq ret (mew-pgp-verify-check)))
     (message "PGP verifying...done")
     ret))
@@ -521,7 +621,7 @@ Set 1 if 5. Set 2 if 6. Set 3 if GNUPG. Set 4 if GNUPG2.")
 	(insert mew-pgp-string)
 	(goto-char (point-min))
 	(if (re-search-forward "SIG_CREATED [A-Z] [0-9]+ \\([0-9]+\\)" nil t)
-	   (setq alg (cdr (assoc (mew-match-string 1) mew-pgp-hash-alist)))))
+	    (setq alg (cdr (assoc (mew-match-string 1) mew-pgp-hash-alist)))))
       (or alg micalg))))
 
 (defun mew-pgp-sign (file1)
@@ -533,7 +633,7 @@ Set 1 if 5. Set 2 if 6. Set 3 if GNUPG. Set 4 if GNUPG2.")
   (let ((process-connection-type mew-connection-type2)
 	(loption (mew-pgp-get mew-prog-pgp-arg-luserid))
 	(ooption (mew-pgp-get mew-prog-pgp-arg-output))
-	(soptions (mew-pgp-get mew-prog-pgps-arg))
+	(soptions (mew-pgp-loopback-options (mew-pgp-get mew-prog-pgps-arg)))
 	(pgps (mew-pgp-get mew-prog-pgps))
 	file2 process)
     (setq file2 (concat (mew-make-temp-name) mew-pgp-ascii-suffix))
@@ -550,7 +650,12 @@ Set 1 if 5. Set 2 if 6. Set 3 if GNUPG. Set 4 if GNUPG2.")
     (mew-rendezvous mew-pgp-running)
     (message "PGP signing...done")
     (unless (file-exists-p file2) ;; for unpredictable error
-      (mew-passwd-set-passwd (mew-pgp-passtag) nil))
+      (mew-passwd-set-passwd (mew-pgp-passtag) nil)
+      ;; Say something.  Handing back a file which is not there leaves
+      ;; the caller to read it and get a file-error, which reaches the
+      ;; user as a backtrace instead of a message.
+      (unless mew-pgp-sign-msg
+	(setq mew-pgp-sign-msg mew-pgp-result-other)))
     (list file2 nil (mew-pgp-get-micalg) mew-pgp-sign-msg))) ;; return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -799,7 +904,7 @@ Set 1 if 5. Set 2 if 6. Set 3 if GNUPG. Set 4 if GNUPG2.")
 (defun mew-old-pgp-sign (cs &optional syntax)
   (let ((file1 (mew-make-temp-name))
 	(mew-prog-pgps-arg mew-prog-old-pgps-arg)
-	file2 fmc errmsg charset)
+	(file2 nil) fmc (errmsg nil) charset)
     (goto-char (mew-header-end))
     (forward-line)
     (unless cs
@@ -819,7 +924,7 @@ Set 1 if 5. Set 2 if 6. Set 3 if GNUPG. Set 4 if GNUPG2.")
 	(progn
 	  (mew-delete-file file1)
 	  (mew-delete-file file2)
-	  (error errmsg))
+	  (error "%s" errmsg))
       (delete-region (point) (point-max))
       (mew-frwlet cs mew-cs-dummy
 	(insert-file-contents file2))
@@ -832,7 +937,7 @@ Set 1 if 5. Set 2 if 6. Set 3 if GNUPG. Set 4 if GNUPG2.")
   (let ((file1 (mew-make-temp-name))
 	(mew-prog-pgps-arg mew-prog-old-pgps-arg)
 	(decrypters (mew-header-parse-address-list mew-destination:-list))
-	file2 file3 fc errmsg charset)
+	(file2 nil) (file3 nil) fc (errmsg nil) charset)
     (goto-char (mew-header-end))
     (forward-line)
     (unless cs
@@ -853,7 +958,7 @@ Set 1 if 5. Set 2 if 6. Set 3 if GNUPG. Set 4 if GNUPG2.")
 	  (mew-delete-file file1)
 	  (mew-delete-file file2)
 	  (mew-delete-file file3)
-	  (error errmsg))
+	  (error "%s" errmsg))
       ;; Create multipart content-header
       (delete-region (point) (point-max))
       (mew-frwlet cs mew-cs-dummy
@@ -918,7 +1023,7 @@ Set 1 if 5. Set 2 if 6. Set 3 if GNUPG. Set 4 if GNUPG2.")
 	(progn
 	  (mew-delete-file file1)
 	  (mew-delete-file file2)
-	  (error (or mew-pgp-sign-msg check)))
+	  (error "%s" (or mew-pgp-sign-msg check)))
       (delete-region (point) (point-max))
       (mew-frwlet cs mew-cs-dummy
 	(insert-file-contents file2))
@@ -969,7 +1074,7 @@ Set 1 if 5. Set 2 if 6. Set 3 if GNUPG. Set 4 if GNUPG2.")
 	 ;; We need MIME-decoded buffer to check PGP boundaries.
 	 (setq type (mew-old-pgp-check))
 	 (if type
-	    (mew-old-pgp-decode fld msg type)
+	     (mew-old-pgp-decode fld msg type)
 	   (message "No PGP data found")))))))
 
 (defun mew-old-pgp-decode (fld msg type)
@@ -978,7 +1083,7 @@ Set 1 if 5. Set 2 if 6. Set 3 if GNUPG. Set 4 if GNUPG2.")
 	 (syntax (mew-cache-decode-syntax cache))
 	 (file (mew-expand-msg fld msg))
 	 mew-inherit-decode-signer
-	 file1 file2 result xmew win start cte)
+	 file1 (file2 nil) result xmew win start cte)
     (with-temp-buffer
       (mew-frwlet mew-cs-text-for-read mew-cs-text-for-write
 	(mew-insert-file-contents file)

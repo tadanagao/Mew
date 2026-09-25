@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; mew-syntax.el --- Internal syntax for Mew
 
 ;; Author:  Mew developing team
@@ -703,8 +704,8 @@ system."
       ;; text/plain only
       (mew-syntax-singlepart subsyntax dec part func 'body)))))
 
-;012345678901234567890123456789012345678901234567890123456789012345678901234567
-;<4>snss<27-2                   >ss<24+2                    >ss<16            >
+					;012345678901234567890123456789012345678901234567890123456789012345678901234567
+					;<4>snss<27-2                   >ss<24+2                    >ss<16            >
 
 (defun mew-syntax-format (syntax number dec)
   (let* ((file (if (not dec) (mew-syntax-get-file syntax)))
@@ -728,7 +729,7 @@ system."
 	 (lf (- LT lm ln lt ld 8))
 	 (marks (make-string lm mew-sp))
 	 (i 0) (N (length privacy))
-	 ctm ctp)
+	 (ctm nil) (ctp nil))
 
     (run-hooks 'mew-syntax-format-hook)
 

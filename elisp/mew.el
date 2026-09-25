@@ -1,8 +1,9 @@
+;;; -*- lexical-binding: t; -*-
 ;;; mew.el --- Messaging in the Emacs World
 
 ;; Author:  Mew developing team
 ;; Created: Mar 23, 1994
-;; Revised: Feb 10, 2023
+;; Revised: May 11, 2026
 
 ;;; Commentary:
 
@@ -18,7 +19,7 @@
 ;;; Mew version
 ;;;
 
-(defconst mew-version-number "6.9"
+(defconst mew-version-number "6.11"
   "Version number for this version of Mew.")
 (defconst mew-version (format "Mew version %s" mew-version-number)
   "Version string for this version of Mew.")
@@ -172,13 +173,9 @@ CONTINUE, YANK-ACTION and SEND-ACTIONS are ignored."
     (condition-case nil
 	(progn
 	  ;; sanity check
-	  (cond
-	   ((featurep 'xemacs)
-	    (setq error-message "Not support XEmacs\n")
+	  (when (< emacs-major-version 27)
+	    (setq error-message "Mew supports Emacs 27.1 or later only\n")
 	    (error ""))
-	   ((string-match "^\\(18\\|19\\|20\\)" emacs-version)
-	    (setq error-message "Not support Emacs 18/19/20 nor Mule 1\n")
-	    (error "")))
 	  ;; initializing
 	  (or no-dir (mew-buffers-init))
 	  (or no-dir (mew-temp-dir-init))
@@ -226,7 +223,7 @@ of the current world is also updated."
    ((and arg (integerp arg))
     (mew-message-for-summary "This command was obsoleted. Type '\\[universal-argument]\\[mew-status-update]' to collect folders"))
    ((consp arg)
-    (let (case proto)
+    (let ((case nil) (proto nil))
       (mew-set '(case proto) (mew-summary-case-proto))
       (cond
        ((mew-folder-localp proto)
@@ -254,7 +251,7 @@ of the current world is also updated."
     (mew-pgp-setup)
     (mew-smime-setup)
     (mew-ssh-setup)
-    (mew-ssl-setup)
+    (mew-stunnel-setup)
     (mew-net-setup)
     (mew-thread-setup)
     (mew-decoration-setup)
@@ -481,8 +478,17 @@ the lower window is not zero, switch to the buffer."
   "Setting temporary directory for Mew.
 mew-temp-file must be local and readable for the user only
 for privacy/speed reasons."
-  (setq mew-temp-dir (make-temp-name mew-temp-file-initial))
-  (mew-make-directory mew-temp-dir)
+  ;; make-temp-file creates the directory itself, with mkdir and mode
+  ;; 700, and gives up a name which is already taken.  make-temp-name
+  ;; only makes up a name; between that and creating the directory
+  ;; someone else can put one there, and mew-make-directory then goes
+  ;; on using what they left.  Everything below is private: the parts
+  ;; of a decrypted message, and the plain text of the password file
+  ;; while gpg is encrypting it.
+  (let ((parent (mew-parent-directory mew-temp-file-initial)))
+    (unless (file-directory-p parent)
+      (mew-make-directory parent)))
+  (setq mew-temp-dir (make-temp-file mew-temp-file-initial t))
   (set-file-modes mew-temp-dir mew-folder-mode)
   (setq mew-temp-file (expand-file-name "mew" mew-temp-dir))
   (add-hook 'kill-emacs-hook 'mew-temp-dir-clean-up))
@@ -730,7 +736,8 @@ Mew remain, so you can resume with buffer operations."
 (require 'mew-highlight)
 (require 'mew-net)
 (require 'mew-ssh)
-(require 'mew-ssl)
+(require 'mew-stunnel)
+(require 'mew-gnutls)
 (require 'mew-smtp)
 (require 'mew-pop)
 (require 'mew-nntp)

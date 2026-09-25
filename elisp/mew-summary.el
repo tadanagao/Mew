@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; mew-summary.el --- Summary mode for Mew
 
 ;; Author:  Mew developing team
@@ -81,10 +82,12 @@
 
 (defmacro mew-summary-multi-msgs (&rest body)
   "Collect messages marked with '*' and set their corresponding
-files to FILES."
+files to FILES.  FLD-MSG-LIST is bound as well, but only for a BODY
+which mentions it: binding it for one which does not is an unused
+variable once this file is compiled with lexical binding."
   (declare (debug (&rest form)))
   `(let* ((FLD-MSGS (mew-summary-mark-collect2 mew-mark-review))
-	  (FLD-MSG-LIST FLD-MSGS) ;; may be used in body
+	  ,@(if (mew-member* 'FLD-MSG-LIST body) '((FLD-MSG-LIST FLD-MSGS)))
 	  FILES) ;; may be used in body
      (cond
       ((null FLD-MSGS)
@@ -267,14 +270,12 @@ and return (beg . end)."
     (mew-summary-buffer-process mew-summary-buffer-process-status)))
 
 (defun mew-summary-setup-mode-line ()
-  (when (boundp 'mode-line-format)
-    (make-local-variable 'mode-line-format)
-    (setq mode-line-format
-	  (copy-sequence (default-value 'mode-line-format)))
-    (nconc mode-line-format mew-mode-line-format))
-  (when (boundp 'line-number-mode)
-    (make-local-variable 'line-number-mode)
-    (setq line-number-mode nil))
+  (make-local-variable 'mode-line-format)
+  (setq mode-line-format
+	(copy-sequence (default-value 'mode-line-format)))
+  (nconc mode-line-format mew-mode-line-format)
+  (make-local-variable 'line-number-mode)
+  (setq line-number-mode nil)
   (or (assq 'mew-summary-buffer-process mode-line-process)
       (setq mode-line-process
 	    (append mew-mode-line-process mode-line-process))))

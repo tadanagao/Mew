@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; mew-vars3.el
 
 ;; Author:  Mew developing team

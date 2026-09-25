@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; mew-const.el
 
 ;; Author:  Mew developing team
@@ -72,6 +73,7 @@
 (defconst mew-x-mailer:    "X-Mailer:")
 (defconst mew-x-face:      "X-Face:")
 (defconst mew-face:        "Face:")
+(defconst mew-bimi-indicator: "BIMI-Indicator:")
 (defconst mew-x-mew:       "X-Mew:")
 (defconst mew-x-mew-uidl:  "X-Mew-Uidl:")
 (defconst mew-x-mew-ref:   "X-Mew-Ref:")
@@ -219,7 +221,7 @@
 
 ;; fld msg
 (defun mew-regex-sumsyn-msg (msg)
-                           (format "\r \\([^ \n]*\\) \\(%s\\) " msg))
+  (format "\r \\([^ \n]*\\) \\(%s\\) " msg))
 
 (defun mew-summary-search-msg (msg)
   (let ((regex (mew-regex-sumsyn-msg msg)))
@@ -291,7 +293,7 @@
 (defconst mew-folder-virtual "*")
 (defconst mew-folder-prefixes
   `(,mew-folder-local ,mew-folder-pop ,mew-folder-imap
-    ,mew-folder-nntp ,mew-folder-virtual))
+		      ,mew-folder-nntp ,mew-folder-virtual))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -328,7 +330,6 @@
 (defconst mew-inherit-pick-mewlp nil)
 (defconst mew-inherit-pick-omit-and nil)
 (defconst mew-inherit-pick-omit-and2 nil)
-(defconst mew-inherit-submission nil)
 (defconst mew-inherit-complete-folder nil)
 
 (provide 'mew-const)

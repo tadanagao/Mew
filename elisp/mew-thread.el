@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; mew-thread.el
 
 ;; Author:  Mew developing team
@@ -167,8 +168,9 @@ All members must have the same length."
 	(setq ofld (mew-vinfo-get-original-folder))
 	(and (equal ofld cfolder)
 	     (get-buffer ofld)
-	     (equal (mew-sinfo-get-cache-time)
-		    (progn (set-buffer ofld) (mew-sinfo-get-cache-time))))))))
+	     (time-equal-p
+	      (mew-sinfo-get-cache-time)
+	      (progn (set-buffer ofld) (mew-sinfo-get-cache-time))))))))
 
 (defun mew-summary-make-thread (&optional arg)
   "If called in Summary mode or Selection, make threads for
@@ -782,14 +784,14 @@ a top node, move onto the top of the previous thread."
 (defun mew-summary-child-local (my-id)
   (let ((pos (point))
         (key (mew-regex-sumsyn-par-id my-id)))
-  (if (or (re-search-forward  key nil t)
-          (re-search-backward key nil t))
-      (progn
-        (mew-thread-move-cursor)
-        (mew-summary-display)
-        t)
-    (goto-char pos)
-    nil)))
+    (if (or (re-search-forward  key nil t)
+            (re-search-backward key nil t))
+	(progn
+          (mew-thread-move-cursor)
+          (mew-summary-display)
+          t)
+      (goto-char pos)
+      nil)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -903,11 +905,11 @@ If the children are hidden, they will appear."
        (mew-decode-syntax-delete)
        (while (setq here (mew-thread-next-property2 (point) (point-max) 0))
 	 (goto-char here)
-       (beginning-of-line)
-       (if (looking-at (concat "^." (regexp-quote (char-to-string mew-mark-thread-root))))
-	   (mew-thread-graft)
-	 (mew-thread-prune))
-       (forward-line))
+	 (beginning-of-line)
+	 (if (looking-at (concat "^." (regexp-quote (char-to-string mew-mark-thread-root))))
+	     (mew-thread-graft)
+	   (mew-thread-prune))
+	 (forward-line))
        (mew-thread-move-cursor)
        (set-buffer-modified-p nil)))))
 

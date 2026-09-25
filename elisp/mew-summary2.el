@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; mew-summary2.el --- Summary mode for Mew
 
 ;; Author:  Mew developing team
@@ -522,7 +523,7 @@ If called with `\\[universal-argument]', it stays writable."
    (let* ((win (selected-window))
 	  (fld (mew-summary-folder-name))
 	  (msg (mew-summary-message-number2))
-	  lst svr-date (snd "?") (rcv "?") last svr date tmp)
+	  lst svr-date (snd "?") (rcv "?") last (svr nil) date tmp)
      (mew-summary-set-message-buffer fld msg)
      ;; message buffer or cache buffer
      (setq lst (nreverse (mew-header-get-value mew-received: 'as-list)))
@@ -539,7 +540,7 @@ If called with `\\[universal-argument]', it stays writable."
 	   ;; for broken MTAs
 	   (if (string-match "Mon\\|Tue\\|Wed\\|Thu\\|Fri\\|Sat\\|Sun" ent)
 	       (setq date (substring ent (match-beginning 0)))))
-	 (if date (setq date (mew-time-rfc-to-sortkey date 'tzadj)))
+	 (if date (setq date (mew-time-rfc-to-sortkey date)))
 	 (unless date (setq date "19700101000000"))
 	 (setq tmp (cons (list date svr) tmp))
 	 (cond

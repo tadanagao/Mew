@@ -3,7 +3,7 @@
 ###
 ### Author:  Mew developing team
 ### Created: Nov 18, 1994
-### Revised: Feb 10, 2023
+### Revised: Sep 17, 2025
 
 EMACS = emacs
 prefix = /usr/local
@@ -14,6 +14,15 @@ elispdir = $(prefix)/share/emacs/site-lisp/mew
 ## DO NOT EDIT THE FOLLOWINGS
 ##
 
+# This Makefile doesn't get remade.
+.PHONY: Makefile
+
+# Too bad we cannot simply say
+#
+#   OBJS = $(SRC:%el=%elc)
+#
+# because this GNU `make` extension has only been added to the POSIX
+# standard in 2024, which is too recent to have broad support.
 OBJS =	mew-addrbook.elc	mew-attach.elc		mew-auth.elc	\
 	mew-blvs.elc		mew-bq.elc		mew-cache.elc	\
 	mew-complete.elc	mew-config.elc		mew-const.elc	\
@@ -32,13 +41,14 @@ OBJS =	mew-addrbook.elc	mew-attach.elc		mew-auth.elc	\
 	mew-pgp.elc		mew-pick.elc		mew-pop.elc	\
 	mew-refile.elc		mew-scan.elc		mew-smime.elc	\
 	mew-search.elc		mew-smtp.elc		mew-sort.elc	\
-	mew-ssh.elc		mew-ssl.elc		mew-passwd.elc	\
+	mew-ssh.elc		mew-stunnel.elc		mew-gnutls.elc  \
+        mew-passwd.elc	\
 	mew-summary.elc		mew-summary2.elc	mew-summary3.elc \
 	mew-summary4.elc	mew-syntax.elc		\
 	mew-thread.elc		mew-unix.elc		\
 	mew-vars.elc		mew-vars2.elc		mew-vars3.elc	\
 	mew-varsx.elc		mew-virtual.elc		\
-	mew-win32.elc		mew-exec.elc	\
+	mew-exec.elc	\
 	mew-darwin.elc		mew.elc
 
 SRCS =	mew-addrbook.el	mew-attach.el	mew-auth.el	\
@@ -59,17 +69,21 @@ SRCS =	mew-addrbook.el	mew-attach.el	mew-auth.el	\
 	mew-pgp.el	mew-pick.el	mew-pop.el	\
 	mew-refile.el	mew-scan.el	mew-smime.el	\
 	mew-search.el	mew-smtp.el	mew-sort.el	\
-	mew-ssh.el	mew-ssl.el	mew-passwd.el	\
+	mew-ssh.el	mew-stunnel.el	mew-gnutls.el   \
+	mew-passwd.el	\
 	mew-summary.el	mew-summary2.el	mew-summary3.el	\
 	mew-summary4.el	mew-syntax.el	\
 	mew-thread.el	mew-unix.el	\
 	mew-vars.el	mew-vars2.el	mew-vars3.el	\
 	mew-varsx.el	mew-virtual.el	\
-	mew-win32.el	mew-exec.el	\
+	mew-exec.el	\
 	mew-darwin.el	mew.el
+
+EXTRA_SRCS = mew-win32.el
 
 TEMPFILE  = temp.el
 TEMPFILE2 = temp2.el
+TEMPFILE3 = temp3.el
 DETECT = emacs
 
 CP = cp
@@ -85,53 +99,92 @@ DESTDIR =
 
 ################################################################
 
+.PHONY: all
 all: $(OBJS)
 
+.PHONY: install
 install: install-elisp
 
 ################################################################
 
-$(OBJS): el
-el: $(TEMPFILE) mew.el
+.PHONY: el
+el: $(OBJS)
+
+$(OBJS): $(TEMPFILE)
 	@echo 'Compiling EL files of Mew ... '
 	@echo 'PLEASE IGNORE WARNINGS IF DISPLAYED. TAKE IT EASY!'
 	$(EMACS) -batch -q -no-site-file -l ./$(TEMPFILE) -f mew-compile
 	@echo 'Compiling EL files of Mew ... done'
 
-$(TEMPFILE):
-	@echo '(setq mew-compiling t)' > $(TEMPFILE)
+$(TEMPFILE): $(SRCS)
+	@echo ';;; -*- lexical-binding: nil; -*-' > $(TEMPFILE)
+	@echo '(setq mew-compiling t)' >> $(TEMPFILE)
 	@echo '(setq load-path (cons "." load-path))' >> $(TEMPFILE)
-	@echo '(defun mew-compile () (mapcar (lambda (x) (byte-compile-file x)) (list ' >> $(TEMPFILE)
-	@echo $(OBJS) | sed -e 's/\(mew[^ ]*\.el\)c/"\1"/g'  >> $(TEMPFILE)
-	@echo ')))' >> $(TEMPFILE)
+	@echo "(defun mew-compile () (mapcar (lambda (x) (byte-compile-file (symbol-name x))) '($(SRCS))))" >> $(TEMPFILE)
 
+.PHONY: install-elisp
 install-elisp: $(OBJS)
 	-@if [ ! -d $(DESTDIR)$(elispdir) ]; then \
 		$(MKDIR) $(DESTDIR)$(elispdir); \
 	fi
 	$(CP) $(SRCS) $(DESTDIR)$(elispdir)
+	$(CP) $(EXTRA_SRCS) $(DESTDIR)$(elispdir)
 	$(CP) $(OBJS) $(DESTDIR)$(elispdir)
 
 ################################################################
 
+# Compile everything and refuse to let a warning pass.  This used to
+# force lexical-binding on, back when the files still said nil; they
+# all say t now, so there is nothing left to force and the job of this
+# target is to keep the build silent.
+.PHONY: detect
 detect: $(TEMPFILE2) mew.el
-	@echo 'Compiling EL files of Mew ... '
+	@echo 'Detecting warnings in EL files of Mew ... '
 	$(DETECT) -batch -q -no-site-file -l ./$(TEMPFILE2) -f mew-compile
-	@echo 'Compiling EL files of Mew ... done'
+	@echo 'Detecting warnings in EL files of Mew ... done'
 
-$(TEMPFILE2):
-	@echo '(setq mew-compiling t)' > $(TEMPFILE2)
+$(TEMPFILE2): $(SRCS)
+	@echo ';;; -*- lexical-binding: t; -*-' > $(TEMPFILE2)
+	@echo '(setq mew-compiling t)' >> $(TEMPFILE2)
 	@echo '(setq load-path (cons "." load-path))' >> $(TEMPFILE2)
-	@echo '(setq hack-local-variables-hook (lambda () (setq lexical-binding t)))' >> $(TEMPFILE2)
-	@echo "(defun mew-compile () (mapcar (lambda (x) (byte-compile-file (symbol-name x))) '($(SRCS))))" >> $(TEMPFILE2)
+	@echo '(setq byte-compile-error-on-warn t)' >> $(TEMPFILE2)
+	@echo "(defun mew-compile ()" >> $(TEMPFILE2)
+	@echo "  (let ((ok t))" >> $(TEMPFILE2)
+	@echo "    (dolist (x '($(SRCS)))" >> $(TEMPFILE2)
+	@echo "      (unless (byte-compile-file (symbol-name x)) (setq ok nil)))" >> $(TEMPFILE2)
+	@echo "    (unless ok (kill-emacs 1))))" >> $(TEMPFILE2)
 
 ################################################################
 
-clean:
-	$(RM) *.elc $(TEMPFILE) $(TEMPFILE2)
+.PHONY: test
+test: mew-test.el
+	@echo 'Testing EL files of Mew ... '
+	$(EMACS) -batch -q -no-site-file -L . -l mew-test.el -f ert-run-tests-batch-and-exit
+	@echo 'Testing EL files of Mew ... done'
 
+################################################################
+
+.PHONY: format
+format: $(TEMPFILE3) mew.el
+	@echo 'Formatting EL files of Mew ... '
+	$(EMACS) -batch -q -no-site-file -l ./$(TEMPFILE3) -f format-files
+	@echo 'Formatting EL files of Mew ... done'
+
+$(TEMPFILE3):
+	@echo '(setq load-path (cons "." load-path))' > $(TEMPFILE3)
+	@echo "(require 'mew)" >> $(TEMPFILE3)
+	@echo '(defun indent-file (file) (save-excursion (find-file (expand-file-name file)) (indent-region (point-min) (point-max)) (save-buffer)))' >> $(TEMPFILE3)
+	@echo "(defun format-files () (mapcar (lambda (x) (indent-file (symbol-name x))) '($(SRCS))))" >> $(TEMPFILE3)
+
+################################################################
+
+.PHONY: clean
+clean:
+	$(RM) *.elc $(TEMPFILE) $(TEMPFILE2) $(TEMPFILE3)
+
+.PHONY: distclean
 distclean:
-	$(RM) *.elc $(TEMPFILE) $(TEMPFILE2)
+	$(RM) *.elc $(TEMPFILE) $(TEMPFILE2) $(TEMPFILE3)
 
 ##
 ## End of Makefile

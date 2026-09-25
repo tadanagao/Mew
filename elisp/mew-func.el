@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; mew-func.el --- Basic functions for Mew
 
 ;; Author:  Mew developing team
@@ -6,6 +7,42 @@
 ;;; Code:
 
 (require 'mew)
+
+(declare-function string-replace "subr")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Multiple set
+;;;
+
+;; This is a macro, and it is here at the top because a macro has to
+;; be known before the first use in this file.
+;;
+;; It used to be a function which assigned with "set".  "set" reaches
+;; the value of the symbol itself, which under dynamic binding is the
+;; binding the caller made, and under lexical binding is not: the
+;; caller's local variable is left alone and the value goes nowhere.
+;; Nothing says so, because the symbol is only known at run time.
+;;
+;; Expanding to setq instead means the variables stay ordinary local
+;; ones, with no need to declare any of them special, and a caller
+;; which forgot to bind one is reported as an assignment to a free
+;; variable.
+
+(defmacro mew-set (vars vals)
+  "Set each variable of VARS to the corresponding value of VALS.
+VARS is a quoted list of symbols.  A nil in it skips a value."
+  (unless (eq (car-safe vars) 'quote)
+    (error "VARS of mew-set must be a quoted list"))
+  (let ((tmp (make-symbol "vals"))
+	(i -1)
+	forms)
+    (dolist (var (cadr vars))
+      (setq i (1+ i))
+      (if var (push `(setq ,var (nth ,i ,tmp)) forms)))
+    `(let ((,tmp ,vals))
+       ,@(nreverse forms)
+       nil)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -238,13 +275,13 @@ in the context of FUNC."
     (setq next (car LIST))
     (if (equal frst MEM)
 	(if next next frst)
-    (catch 'loop
-      (while LIST ;; cannot use dolist
-	(setq crnt next)
-	(setq LIST (cdr LIST))
-	(setq next (car LIST))
-	(if (equal crnt MEM)
-	    (throw 'loop (if next next frst))))))))
+      (catch 'loop
+	(while LIST ;; cannot use dolist
+	  (setq crnt next)
+	  (setq LIST (cdr LIST))
+	  (setq next (car LIST))
+	  (if (equal crnt MEM)
+	      (throw 'loop (if next next frst))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -297,10 +334,7 @@ in the context of FUNC."
 
 (defun mew-replace-character (string from to)
   "Replace characters equal to FROM to TO in STRING."
-  (dotimes (cnt (length string))
-    (if (char-equal (aref string cnt) from)
-	(aset string cnt to)))
-  string)
+  (subst-char-in-string from to string))
 
 (defun mew-replace-white-space (string)
   "Replace white characters to a space."
@@ -385,24 +419,28 @@ Words are separated by '/' and '-'."
 	(setq ret (cons (substring str start) ret)))
     (nreverse ret)))
 
-(defun mew-remove-single-quote (str)
-  (let* ((len (length str))
-	 (ret (mew-make-string len))
-	 (j 0))
-    (dotimes (i len)
-      (unless (char-equal (aref str i) ?')
-	(aset ret j (aref str i))
-	(setq j (1+ j))))
-    (substring ret 0 j)))
+;; string-replace came in with Emacs 28.1.
+(if (>= emacs-major-version 28)
+    (defun mew-remove-single-quote (str)
+      (string-replace "'" "" str))
+  (defun mew-remove-single-quote (str)
+    (let* ((len (length str))
+	   (ret (mew-make-string len))
+	   (j 0))
+      (dotimes (i len)
+	(unless (char-equal (aref str i) ?')
+	  (aset ret j (aref str i))
+	  (setq j (1+ j))))
+      (substring ret 0 j))))
 
 (defun mew-split-quoted (str sepchar &optional qopen qclose no-single)
   "Return a list of strings splitting STR with SEPCHAR.
 SEPCHARs in double-quoted strings are ignored.
 If QUOTEDCHAR is provided, SEPCHARs between QOPEN and QCLOSE are
 also ignored."
-  (let ((qlevel 0) (len (length str)) (start 0) dblq sub ret c)
+  (let ((qlevel 0) (len (length str)) (start 0) (i 0) dblq sub ret c)
     (if (and qopen (not qclose)) (setq qclose qopen))
-    (dotimes (i len)
+    (while (< i len) ;; cannot use non-lexbind dotimes since Emacs 29 does not support it
       (setq c (aref str i))
       (cond
        ((char-equal ?\\ c)
@@ -419,7 +457,8 @@ also ignored."
 	  (unless no-single
 	    (setq sub (mew-remove-single-quote sub)))
 	  (setq ret (cons sub ret))
-	  (setq start (1+ i))))))
+	  (setq start (1+ i)))))
+      (setq i (1+ i)))
     (when (/= start len)
       (setq sub (substring str start))
       (unless no-single
@@ -448,8 +487,8 @@ also ignored."
 (defun mew-quote-string (str qchar targets)
   "If characters in STR is a member of TARGETS, QCHAR is prepended to them."
   (let* ((len (length str))
-	(ret (mew-make-string (* len 2)))
-	(j 0) c)
+	 (ret (mew-make-string (* len 2)))
+	 (j 0) c)
     (dotimes (i len)
       (setq c (aref str i))
       (when (member c targets)
@@ -532,7 +571,8 @@ If case is \"default\", it is not prepended."
   (concat mew-folder-local folder))
 
 (defun mew-folder-path-to-folder (path &optional has-proto)
-  (let (case proto)
+  (let ((case nil)
+	(proto nil))
     ;; depends on folder
     (mew-set '(case proto) (mew-summary-case-proto))
     (if (mew-folder-localp proto)
@@ -929,8 +969,9 @@ If case is \"default\", it is not prepended."
 ;; Functions to get other attributes are implemented in C level.
 
 (defun mew-file-get-links (file)
-  (let ((w32-get-true-file-link-count t)) ;; for Meadow
-    (nth 1 (file-attributes file))))
+  ;; There used to be a let of w32-get-true-file-link-count here, for
+  ;; Meadow.  No Emacs has that variable any more.
+  (nth 1 (file-attributes file)))
 
 (defun mew-file-get-time (file)
   (nth 5 (file-attributes file)))
@@ -1065,11 +1106,38 @@ and sets buffer-file-coding-system."
       (aset ret i (aref base (% (mew-random) baselen))))
     ret))
 
+(defvar mew-random-device "/dev/urandom"
+  "Where random bytes for secrets come from, or nil to do without one.
+`mew-random' will not do for a secret: it is built on `random', whose
+output can be worked out from enough other output, and the Message-ID
+and the MIME boundary of every message Mew sends are built on it too.")
+
+(defun mew-random-device-string (len)
+  "Read LEN bytes from `mew-random-device'.
+Return nil if they cannot be read, as on a system without one."
+  (when (stringp mew-random-device)
+    (condition-case nil
+	(let ((str (with-temp-buffer
+		     (set-buffer-multibyte nil)
+		     (let ((coding-system-for-read 'binary))
+		       ;; A start position is only allowed on a regular
+		       ;; file, so read from the beginning of the device.
+		       (insert-file-contents-literally
+			mew-random-device nil nil len))
+		     (buffer-string))))
+	  (if (= (length str) len) str))
+      (error nil))))
+
 (defun mew-random-binary-string (len)
-  (let ((ret (mew-make-string len)))
-    (dotimes (i len)
-      (aset ret i (% (mew-random) 255)))
-    ret))
+  "Return a string of LEN random bytes.
+They come from `mew-random-device' when it can be read.  Otherwise
+`mew-random' provides them, which is the best that can be done without
+a device, but see the warning there."
+  (or (mew-random-device-string len)
+      (let ((ret (mew-make-string len)))
+	(dotimes (i len)
+	  (aset ret i (% (mew-random) 256)))
+	ret)))
 
 (defun mew-random-filename (dir len nump &optional suffix)
   (let ((cnt 0) (max 20) ;; ad hoc
@@ -1112,13 +1180,8 @@ and sets buffer-file-coding-system."
     (push-mark (point) t t)))
 
 (defun mew-region-bytes (beg end buf)
-  ;; string-bytes() acts differently on each Emacs.
-  ;; set-buffer-multibyte is also buggy.
-  ;; So, use this way.
   (with-current-buffer buf
-    (if (fboundp 'string-as-unibyte)
-	(length (string-as-unibyte (mew-buffer-substring beg end)))
-      (- end beg))))
+    (string-bytes (mew-buffer-substring beg end))))
 
 (defun mew-count-lines (beg end)
   "Return number of lines between BEG and END."
@@ -1195,6 +1258,28 @@ and sets buffer-file-coding-system."
 	(process-environment (copy-sequence process-environment)))
     (if disp (setenv "DISPLAY" disp))
     (apply 'start-process name buffer program program-args)))
+
+(defvar mew-process-password nil
+  "Bound while a program which asks for a password is running, so that
+its filter can answer.  A process filter is handed nothing but the
+process and the output, so the password has to reach it through a
+variable.  Answering the prompt keeps the password off the command
+line, where \"ps\" would show it to everybody on the machine.")
+
+(defvar mew-process-idle-max 600
+  "Give up on a program which says nothing for this many tenths of a
+second.  One which asks for a password sits on its pty for ever if
+nobody answers.")
+
+(defun mew-process-wait (pro)
+  "Wait for PRO to finish, or to fall silent for `mew-process-idle-max'.
+PRO is killed if it is still alive by then."
+  (let ((idle 0))
+    (while (and (process-live-p pro) (< idle mew-process-idle-max))
+      (if (accept-process-output pro 0.1)
+	  (setq idle 0)
+	(setq idle (1+ idle))))
+    (if (process-live-p pro) (delete-process pro))))
 
 (defvar mew-process-prior-locale-category "LC_ALL")
 (defvar mew-process-prior-locale-value
@@ -1313,6 +1398,16 @@ and sets buffer-file-coding-system."
   "This creates a list of regular expression used to tell
 whether or not a given address is mine. The list is created
 from (mew-user), (mew-mail-address), and `mew-mail-address-list'."
+  ;; The first one has no domain in it, on purpose: mail delivered
+  ;; locally tends to arrive with a bare user name in From:, and that
+  ;; is mine as well.  Mew itself always writes a whole address, so a
+  ;; From: without a domain comes from somewhere else.
+  ;;
+  ;; Everything else is a whole address.  mew-mail-address-list is
+  ;; built by mew-config-setup out of (mew-mail-address case) of every
+  ;; case, each anchored at both ends.
+  ;;
+  ;; The match ignores case; see mew-is-my-address.
   (cons (concat "^" (regexp-quote (mew-user)) "$")
 	(cons (concat "^" (regexp-quote (mew-mail-address)) "$")
 	      mew-mail-address-list)))
@@ -1447,14 +1542,13 @@ by side-effect."
 
 ;; "20000726121835"
 (defun mew-time-ctz-to-sortkey (time)
-  (let ((system-time-locale "C"))
-    (format-time-string "%Y%m%d%H%M%S" time)))
+  (format-time-string "%Y%m%d%H%M%S" time))
 
 (defun mew-time-ctz-to-sortkey-invalid (sec min hour day mon year)
   (format "%04d%02d%02d%02d%02d%02d" year mon day hour min sec))
 
 ;; "20000726121835"
-(defun mew-time-rfc-to-sortkey (s &optional tzadj)
+(defun mew-time-rfc-to-sortkey (s)
   (if (string-match mew-time-rfc-regex s)
       (let ((year (mew-time-rfc-year))
 	    (mon  (mew-time-mon-str-to-int (mew-time-rfc-mon)))
@@ -1463,17 +1557,20 @@ by side-effect."
 	    (min  (mew-time-rfc-min))
 	    (sec  (mew-time-rfc-sec))
 	    (tmzn (mew-time-rfc-tmzn)))
+	;; RFC 5322 4.3: two digits under 50 are 20xx, and anything else
+	;; of two or three digits is 19xx.
 	(cond
 	 ((< year 50)
 	  (setq year (+ year 2000)))
-	 ((< year 150)
+	 ((< year 1000)
 	  (setq year (+ year 1900))))
-	(if (or (< year 1970) (>= year 2038))
-	    ;; invalid data
-	    (mew-time-ctz-to-sortkey-invalid sec min hour day mon year)
-	  (setq sec (- sec tmzn))
-	  (if tzadj (setq sec (+ sec (car (current-time-zone)))))
-	  (mew-time-ctz-to-sortkey (encode-time sec min hour day mon year))))))
+	(condition-case nil
+	    ;; This uses local zone which ensures correct behavior
+	    ;; for both sorting and path tracing.
+	    (mew-time-ctz-to-sortkey (encode-time (list sec min hour day mon year nil -1 tmzn)))
+	  (error
+	   ;; invalid data
+	   (mew-time-ctz-to-sortkey-invalid sec min hour day mon year))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -1489,55 +1586,48 @@ by side-effect."
 ;; Wed, 26 Jul 2000 21:18:35 +0900 (JST)
 (defun mew-time-ctz-to-rfc (time)
   (let* ((system-time-locale "C")
-	 ;; A bug of Emacs 22.3 on Windows
-	 (time-zone-name (format-time-string "%Z" time))
-	 (date (format-time-string "%a, %d %b %Y %T %z" time)))
-    (if (string= time-zone-name "")
-	date
-      (concat date (format " (%s)" time-zone-name)))))
+	 (date (format-time-string "%a, %d %b %Y %T %z (%Z)" time)))
+    ;; Omit comment if %Z produces the empty string
+    (if (eq ?\( (aref date (- (length date) 2)))
+	(substring date -3)
+      date)))
 
 ;; 2000/07/12 16:22:30
 (defun mew-time-ctz-to-logtime (time)
-  (let ((system-time-locale "C"))
-    (format-time-string "%Y/%m/%d %H:%M:%S" time)))
+  (format-time-string "%Y/%m/%d %H:%M:%S" time))
 
 ;; 20000712.155559
 (defun mew-time-ctz-to-msgid (time)
-  (let ((system-time-locale "C"))
-    (format-time-string "%Y%m%d.%H%M%S" time)))
+  (format-time-string "%Y%m%d.%H%M%S" time))
 
 ;;
 
 (defun mew-time-calc (new old)
-  (let ((million 1000000)
-	(sec (+ (* 65536 (- (nth 0 new) (nth 0 old)))
-		(- (nth 1 new) (nth 1 old))))
-	(usec (- (nth 2 new) (nth 2 old))))
-    (if (< usec 0)
-        (setq sec (1- sec)
-              usec (+ usec million))
-      (if (>= usec million)
-          (setq sec (1+ sec)
-                usec (- usec million))))
-    (+ sec (/ usec (float million)))))
+  (float-time (time-subtract new old)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Time
+;;;
+
+;; Emacs 27 introduced time-equal-p,
+;; but Mew assumes only Emacs 26.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Multibyte
 ;;;
 
-(defun mew-set-buffer-multibyte (arg)
-  (if (fboundp 'set-buffer-multibyte)
-      (set-buffer-multibyte arg)))
+(defalias 'mew-set-buffer-multibyte 'set-buffer-multibyte)
 
 (defun mew-set-string-multibyte (str)
-  (if (fboundp 'string-as-multibyte)
-      (string-as-multibyte str)
-    str))
+  "Read the bytes of STR as Emacs's own multibyte representation.
+A string which is multibyte already comes back as it is.  This is
+what the obsolete `string-as-multibyte' did."
+  (if (multibyte-string-p str)
+      str
+    (decode-coding-string str 'utf-8-emacs)))
 
-(defun mew-multibyte-string-p (str)
-  (if (fboundp 'multibyte-string-p)
-      (multibyte-string-p str)))
+(defalias 'mew-multibyte-string-p 'multibyte-string-p)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -1592,16 +1682,6 @@ by side-effect."
 
 (defun mew-timing ()
   (sit-for 0.01))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;; Multiple set
-;;;
-
-(defun mew-set (vars vals)
-  (dolist (var vars)
-    (if var (set var (car vals))) ;; var can be nil to skip
-    (setq vals (cdr vals))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

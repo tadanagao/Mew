@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; mew-draft.el --- Draft mode for Mew
 
 ;; Author:  Mew developing team
@@ -224,10 +225,10 @@ the Body: field."
 ;;;
 
 (defun mew-draft-header (&optional subject nl to cc newsgroups in-reply-to references other-headers fromme)
-;; to -- string or list
-;; cc -- string or list
-;; nl -- one empty line under "----", which is necessary if
-;;      attachment is prepared
+  ;; to -- string or list
+  ;; cc -- string or list
+  ;; nl -- one empty line under "----", which is necessary if
+  ;;      attachment is prepared
   (let ((del (unless fromme mew-regex-my-address-list)) ;; deleting list
 	case body)
     (goto-char (point-min))
@@ -322,8 +323,8 @@ citation prefix and label.
 2. If called with '\\[universal-argument]', the header is also copied if exists.
 3. If an Emacs mark exists, the target is the region between the mark and
    the cursor."
-;; MUST take care of C-x C-x
-;; MUST be able to cancel by C-x u
+  ;; MUST take care of C-x C-x
+  ;; MUST be able to cancel by C-x u
   (interactive "P")
   (if (and (not force) (or (mew-in-header-p) (mew-in-attach-p)))
       (message "Cannot cite a message here")
@@ -373,8 +374,8 @@ citation prefix and label.
 2. If called with '\\[universal-argument]', the header is also copied if exists.
 3. If an Emacs mark exists, the target is the region between the mark and
    the cursor."
-;; MUST take care of C-x C-x
-;; MUST be able to cancel by C-x u
+  ;; MUST take care of C-x C-x
+  ;; MUST be able to cancel by C-x u
   (interactive "P")
   (if (and (not force) (or (mew-in-header-p) (mew-in-attach-p)))
       (message "Cannot cite a message here")
@@ -595,9 +596,9 @@ format=flowed is used on composing."
 	    (mew-decode-flowed (point) (point-max)
 			       (if (string= (mew-tinfo-get-flowed) "yes") t nil))
 	    (mew-tinfo-set-flowed nil))
-	(let* ((charset (mew-charset-guess-region (point) (point-max)))
-	       (flowed-delsp (mew-encode-flowed (point) (point-max) charset))
-	       flowed delsp)
+	(let* ((flowed-delsp (mew-encode-flowed (point) (point-max)))
+	       (flowed nil)
+	       (delsp nil))
 	  (mew-set '(flowed delsp) flowed-delsp)
 	  (if (not flowed)
 	      (message "No line folded")
@@ -636,11 +637,33 @@ flowed or not.  Here is an example:
 ;;; Misc
 ;;;
 
+(defun mew-draft-body-clear-read-only ()
+  "Take the read-only property off the body of this draft.
+In a draft only the header separator and the attachments are meant to
+carry it.  A body which has somehow come by it can be neither edited
+nor sent, and nothing takes it off again, so the draft stays that way
+for as long as the buffer lives.  See #128."
+  (let ((end (mew-header-end)))
+    (when end
+      (save-excursion
+	(goto-char end)
+	(forward-line) ;; over the separator
+	(let ((beg (point))
+	      ;; the attachments keep theirs
+	      (fin (or (mew-attach-begin) (point-max))))
+	  (when (< beg fin)
+	    (mew-elet
+	     (put-text-property beg fin 'read-only nil))))))))
+
 (defun mew-draft-save-buffer ()
   "Save this draft."
   (interactive)
   (let ((after-change-functions nil))
     (save-excursion
+      ;; This runs at the end of every draft preparation and again on
+      ;; every C-x C-s, so a body which has come by the property is
+      ;; freed rather than staying stuck.
+      (mew-draft-body-clear-read-only)
       (mew-header-clear 'keep-read-only)
       (insert-before-markers "\n") ;; for mew-summary-reply
       (save-buffer)

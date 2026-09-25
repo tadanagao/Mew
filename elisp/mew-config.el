@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; mew-config.el
 
 ;; Author:  Mew developing team
@@ -117,7 +118,7 @@
 (defun mew-mail-address (&optional case)
   (concat (mew-user case) "@" (mew-mail-domain case)))
 
-;; mew-from is really strange to maintain backword compatibility.
+;; mew-from is really strange to maintain backward compatibility.
 (defun mew-from (&optional case)
   (or (unless mew-config-alist
 	(if mew-generate-from-list
@@ -225,7 +226,7 @@
   (let* ((random (format "%08d" (mew-random)))
 	 (domain (mew-smtp-msgid-domain case))
 	 (user (mew-smtp-msgid-user case))
-	 (time (mew-time-ctz-to-msgid (current-time))))
+	 (time (mew-time-ctz-to-msgid nil)))
     (concat "<" time "." random "." user "@" domain ">")))
 
 (defun mew-use-smtp-auth (&optional case)
@@ -373,7 +374,7 @@
   (let* ((random (format "%08d" (mew-random)))
 	 (domain (mew-nntp-msgid-domain case))
 	 (user (mew-nntp-msgid-user case))
-	 (time (mew-time-ctz-to-msgid (current-time))))
+	 (time (mew-time-ctz-to-msgid nil)))
     (concat "<" time "." random "." user "@" domain ">")))
 ;;
 

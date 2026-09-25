@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; mew-ext.el --- Message/External-Body support for Mew
 
 ;; Author:  Mew developing team
@@ -8,10 +9,16 @@
 (require 'mew)
 (eval-when-compile
   (cond
-;;   ((mew-which-el "efs")
-;;    (require 'efs))
+   ;;   ((mew-which-el "efs")
+   ;;    (require 'efs))
    ((mew-which-el "ange-ftp")
-    (require 'ange-ftp))))
+    (require 'ange-ftp)))
+  (require 'mew-env0)
+  (mew-no-warning-defvar mew-prog-text/html-ext)
+  (declare-function ange-ftp-copy-file-internal "ange-ftp.el")
+  (declare-function ange-ftp-expand-file-name "ange-ftp.el")
+  (declare-function ange-ftp-file-name-completion "ange-ftp.el")
+  (declare-function ange-ftp-file-name-all-completions "ange-ftp.el"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -25,7 +32,7 @@
 
 (defvar mew-ext-encode-switch
   '(("ftp"         . mew-ext-encode-ftp)
-;;    ("tftp"        . mew-ext-encode-tftp)
+    ;;    ("tftp"        . mew-ext-encode-tftp)
     ("anon-ftp"    . mew-ext-encode-anon-ftp)
     ("local-file"  . mew-ext-encode-local-file)
     ("mail-server" . mew-ext-encode-mail-server)
@@ -61,28 +68,28 @@
 ;;;
 
 (cond
-;;  ((mew-which-el "efs")
-;;   (defun mew-ext-file-name-completion (file path)
-;;     (require 'efs)
-;;     (let ((efs-tmp-name-template mew-temp-file))
-;;       (efs-file-name-completion file path)))
-;;   (defun mew-ext-file-name-all-completions (file path)
-;;     (require 'efs)
-;;     (let ((efs-tmp-name-template mew-temp-file))
-;;       (efs-file-name-all-completions file path)))
-;;   (defun mew-ext-expand-dir (host user dir)
-;;     (require 'efs)
-;;     (let ((efs-tmp-name-template mew-temp-file) exp)
-;;       (setq exp (efs-expand-file-name (format "/%s@%s:%s" user host dir)))
-;;       (if (string-match ".*:\\(.*\\)$" exp)
-;;	 (match-string 1 exp))))
-;;   (defun mew-ext-copy-file-internal (remote local passwd)
-;;     (require 'efs)
-;;     (let ((efs-tmp-name-template mew-temp-file)
-;;	  (efs-generate-anonymous-password passwd)
-;;	  (parsed (efs-ftp-path remote)))
-;;       (efs-copy-file-internal remote parsed local nil
-;;			      nil nil nil nil t 'image))))
+ ;;  ((mew-which-el "efs")
+ ;;   (defun mew-ext-file-name-completion (file path)
+ ;;     (require 'efs)
+ ;;     (let ((efs-tmp-name-template mew-temp-file))
+ ;;       (efs-file-name-completion file path)))
+ ;;   (defun mew-ext-file-name-all-completions (file path)
+ ;;     (require 'efs)
+ ;;     (let ((efs-tmp-name-template mew-temp-file))
+ ;;       (efs-file-name-all-completions file path)))
+ ;;   (defun mew-ext-expand-dir (host user dir)
+ ;;     (require 'efs)
+ ;;     (let ((efs-tmp-name-template mew-temp-file) exp)
+ ;;       (setq exp (efs-expand-file-name (format "/%s@%s:%s" user host dir)))
+ ;;       (if (string-match ".*:\\(.*\\)$" exp)
+ ;;	 (match-string 1 exp))))
+ ;;   (defun mew-ext-copy-file-internal (remote local passwd)
+ ;;     (require 'efs)
+ ;;     (let ((efs-tmp-name-template mew-temp-file)
+ ;;	  (efs-generate-anonymous-password passwd)
+ ;;	  (parsed (efs-ftp-path remote)))
+ ;;       (efs-copy-file-internal remote parsed local nil
+ ;;			      nil nil nil nil t 'image))))
  ((mew-which-el "ange-ftp")
   (defun mew-ext-file-name-completion (file path)
     (require 'ange-ftp)
@@ -137,8 +144,9 @@
 (defun mew-create-content-id ()
   ;; this is not unique if used with very short interval.
   ;; but it's ok
-  (format "<%s.%s.%s@%s>" (nth 0 (current-time)) (nth 1 (current-time))
-	  (emacs-pid) (system-name)))
+  (let ((now (time-convert nil 'integer)))
+    (format "<%s.%s.%s@%s>" (ash now -16) (logand now 65535)
+	    (emacs-pid) (system-name))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

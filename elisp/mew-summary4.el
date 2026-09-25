@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; mew-summary4.el --- Summary mode for Mew
 
 ;; Author:  Mew developing team
@@ -388,6 +389,25 @@ If executed with `\\[universal-argument]', coding-system is asked."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; BIMI-Indicator:
+;;;
+
+(defun mew-summary-bimi ()
+  "Display BIMI logo."
+  (interactive)
+  (mew-summary-msg
+   (let ((file (mew-make-temp-name)) bimi)
+     (with-current-buffer (mew-buffer-message)
+       (setq bimi (base64-decode-string (mew-header-get-value mew-bimi-indicator:))))
+     (when bimi
+       (with-temp-buffer
+	 (insert bimi)
+	 (mew-frwlet mew-cs-dummy mew-cs-text-for-write
+	   (write-region (point-min) (point-max) file nil 'no-msg)))
+       (mew-mime-image-ext file)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
 ;;; Calling a command
 ;;;
 
@@ -481,7 +501,7 @@ If executed with `\\[universal-argument]', you can set the sending case."
 
 (defun mew-subprocess-clean-up ()
   (mew-summary-kill-subprocess t)
-  (remove-hook 'kill-emacs-hook 'mew-subprocess-kil))
+  (remove-hook 'kill-emacs-hook 'mew-subprocess-kill))
 
 (defun mew-subprocess-kill ()
   (mew-summary-kill-subprocess t))
@@ -810,7 +830,7 @@ message."
   "Copy messages marked with `*' to a local folder.  If called
 with `\\[universal-argument]', only messages marked with `*' in
 the region are handled."
- (interactive "P")
+  (interactive "P")
   (mew-summary-not-in-draft
    (let ((mew-use-highlight-x-face nil)
 	 (fld (mew-summary-folder-name))

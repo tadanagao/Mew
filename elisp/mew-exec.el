@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; mew-exec.el
 
 ;; Author:  Mew developing team
@@ -219,14 +220,14 @@ all marked messages before the current message."
 	(mew-summary-exec-region beg end)))))
 
 (defun mew-summary-exec-delete ()
-  "Process messages marked with 'D'."
+  "Process messages marked with `D'."
   (interactive)
   (let* ((ent (assoc mew-mark-delete mew-mark-spec))
 	 (mew-mark-spec (list ent)))
     (mew-summary-exec-region (point-min) (point-max))))
 
 (defun mew-summary-exec-unlink ()
-  "Process messages marked with 'X'."
+  "Process messages marked with `X'."
   (interactive)
   (let* ((ent (assoc mew-mark-unlink mew-mark-spec))
 	 (mew-mark-spec (list ent)))
@@ -615,7 +616,7 @@ the queue, type '\\[mew-summary-send-message]' in the queue online."
 	(mew-lisp-save file-info job 'nobackup 'unlimit)
 	(with-temp-buffer
 	  (mew-header-insert mew-subj: (format "IMAP jobs for %s" fld))
-	  (mew-header-insert mew-date: (mew-time-ctz-to-rfc (current-time)))
+	  (mew-header-insert mew-date: (mew-time-ctz-to-rfc nil))
 	  (mew-header-insert mew-from: "Mew IMAP manager")
 	  (insert "\n")
 	  (insert "Messages to be refiled:\n")

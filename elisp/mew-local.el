@@ -1,10 +1,12 @@
+;;; -*- lexical-binding: t; -*-
 ;;; mew-local.el
 
 ;; Author:  Mew developing team
 ;; Created: Dec 12, 2001
 
 (eval-when-compile
-  (require 'mew-summary))
+  (require 'mew-summary)
+  (require 'mew-env0))
 
 (defvar mew-local-folder-alist-file ".mew-folder-alist")
 (defvar mew-local-folder-alist nil)
@@ -17,6 +19,11 @@
 ;;;
 ;;; Listing directories
 ;;;
+
+;; Defined in mew-unix.el, mew-darwin.el or mew-win32.el, whichever
+;; mew-init requires.  That happens at run time, so say here that the
+;; name is a variable.
+(defvar mew-dir-list-function)
 
 (defun mew-dir-list (dir)
   (if (file-directory-p (expand-file-name dir))
@@ -386,8 +393,12 @@ Binary search is used for speed reasons."
        (mew-remove-buffer buf)))))
 
 (defun mew-virtual-set-cache-time ()
-  (let* ((ctime (current-time))
-	 (cache-time (list (nth 0 ctime) (nth 1 ctime))))
+  ;; Keep timestamps in (HI LO) form,
+  ;; so that files that current Mew generates
+  ;; can be read by Mew versions predating August 2026.
+  ;; This loses subsecond information.
+  (let* ((ctime (time-convert nil 'integer))
+	 (cache-time (list (ash ctime -16) (logand ctime 65535))))
     (mew-sinfo-set-cache-time cache-time)))
 
 ;;; Code:

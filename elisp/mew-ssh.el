@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; mew-ssh.el
 
 ;; Author:  Mew developing team

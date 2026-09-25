@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; mew-imap.el for reading
 
 ;; Author:  Mew developing team
@@ -32,7 +33,7 @@
 ;;;
 
 (defvar mew-imap-info-list
-  '("server" "port" "process" "ssh-process" "ssl-process" "ssl-p" "status"
+  '("server" "port" "process" "ssh-process" "ssl-process" "secure" "status"
     "directive" "bnm" "mdb"
     "rmvs" "kils" "refs" "movs"
     "rtrs" "dels" "uidl" "range"
@@ -64,7 +65,7 @@
     ("auth-login"    ("OK" . "user-login") ("NO" . "wpwd"))
     ("user-login"    ("OK" . "pwd-login") ("NO" . "wpwd"))
     ("pwd-login"     ("OK" . "next") ("NO" . "wpwd"))
-    ("login"         ("OK" . "next") ("NO" . "wpwd"))
+    ("login"         ("OK" . "next") ("NO\\|BAD" . "wpwd"))
     ("select"        ("OK" . "post-select"))
     ("flags"         ("OK" . "flags")) ;; xxx NG but loop
     ("uid"           ("OK" . "umsg"))
@@ -107,7 +108,7 @@
 ;;;
 
 (defun mew-imap-secure-p (pnm)
-  (or (mew-imap-get-ssh-process pnm) (mew-imap-get-ssl-p pnm)))
+  (mew-imap-get-secure pnm))
 
 (defun mew-imap-command-capability (pro pnm)
   (mew-net-status (mew-imap-get-status-buf pnm)
@@ -311,7 +312,7 @@
 	(setq siz (mew-match-string 1)))
       (when (looking-at ".*FLAGS (\\([^)]*\\)") ;; MUST be a list of flags
 	(setq flags (mew-match-string 1))
-	(if (string-match "Flagged" flags) ;; \\\\ is urgly
+	(if (string-match "Flagged" flags) ;; \\\\ is ugly
 	    (setq mdb (cons (list uid mew-mark-review) mdb))
 	  (if (string-match "Seen" flags)
 	      (setq mdb (cons (list uid mew-mark-read) mdb)))))
@@ -668,7 +669,7 @@
        pro pnm
        (if (mew-imap-get-gm-ext-1 pnm)
            "UID FETCH %s (X-GM-MSGID X-GM-THRID X-GM-LABELS BODY.PEEK[HEADER])"
-           "UID FETCH %s BODY.PEEK[HEADER]")
+         "UID FETCH %s BODY.PEEK[HEADER]")
        uid)))))
 
 (defun mew-imap-command-post-fetch (pro pnm)
@@ -779,7 +780,8 @@
 	   (case (mew-imap-get-case pnm))
 	   (prefix-list (mew-imap-prefix-list case))
 	   (my-prefix "")
-	   user-prefix sexp sep sharp namespace ent my sp specials)
+	   (my nil) (sp nil)
+	   user-prefix sexp sep sharp namespace ent specials)
       (goto-char (point-max))
       (forward-line -1)
       (save-restriction
@@ -831,7 +833,7 @@
 	 (queue (mew-imap-queue-folder case))
 	 (namespace (mew-imap-get-namespace pnm))
 	 (specials (mew-imap-get-specials pnm))
-	 ret mailboxes friends)
+	 ret mailboxes (friends nil))
     (unless namespace
       (setq namespace (mew-imap-namespace-create nil "" "" nil)) ;; xxx separator?
       (mew-imap-set-namespace pnm namespace))
@@ -1111,7 +1113,7 @@
 	 (namespace (assoc mew-imap-inbox-folder alist)))
     (if (= (length namespace) mew-imap-namespace-length)
 	namespace
-      (error (mew-substitute-for-summary "Type '\\[universal-argument]\\[mew-status-update]' to collect IMAP folders!")))))
+      (error "%s" (mew-substitute-for-summary "Type '\\[universal-argument]\\[mew-status-update]' to collect IMAP folders!")))))
 
 (defun mew-imap-namespace-sep (namespace)
   (nth 1 namespace))
@@ -1139,7 +1141,7 @@
     (if (char-equal sep-char (aref dir len))
 	(substring dir 0 len)
       dir)))
-	
+
 (defun mew-imap-file-name-as-directory (dir case)
   ;; inbox.foo => inbox.foo.
   (let* ((sep (mew-imap-separator case))
@@ -1247,27 +1249,26 @@
 
 (defun mew-imap-open (pnm case server port no-msg starttlsp)
   (let ((sprt (mew-*-to-port port))
-	(sslnp (mew-ssl-native-p (mew-imap-ssl case)))
+	(gnutlsp (mew-gnutls-p (mew-imap-ssl case)))
+	(pro-plist (list nil))
 	pro tm)
     (condition-case emsg
 	(progn
 	  (setq tm (run-at-time mew-imap-timeout-time nil 'mew-imap-timeout))
 	  (or no-msg (message "Connecting to the IMAP server..."))
-	  (setq pro (mew-open-network-stream pnm nil server sprt
-					     'imap sslnp starttlsp case))
-	  (setq pro (car pro))
+	  (setq pro-plist (mew-open-network-stream pnm nil server sprt
+						   'imap gnutlsp starttlsp case))
+	  (setq pro (car pro-plist))
 	  (when (not (processp pro)) (signal 'quit nil))
 	  (mew-process-silent-exit pro)
 	  (mew-set-process-cs pro mew-cs-binary mew-cs-text-for-net)
 	  (or no-msg (message "Connecting to the IMAP server...done")))
       (quit
-       (or no-msg (message "Cannot connect to the IMAP server"))
-       (setq pro nil))
+       (or no-msg (message "Cannot connect to the IMAP server")))
       (error
-       (or no-msg (message "%s, %s" (nth 1 emsg) (nth 2 emsg)))
-       (setq pro nil)))
+       (or no-msg (message "%s, %s" (nth 1 emsg) (nth 2 emsg)))))
     (if tm (cancel-timer tm))
-    pro))
+    pro-plist))
 
 (defun mew-imap-timeout ()
   ;; Do not timeout if the NSM query pane is active.
@@ -1296,20 +1297,18 @@
 	  (setq ret (cons (mew-make-mark-hist :msg msg :mark mew-mark-read) ret))))))
     (nreverse ret)))
 
-(defvar mew--gnutls-imap-greeting nil)
-
 (defun mew-imap-retrieve (case directive bnm &rest args)
   (let* ((server (mew-imap-server case))
          (user (mew-imap-user case))
 	 (port (mew-*-to-string (mew-imap-port case)))
 	 (sshsrv (mew-imap-ssh-server case))
-	 (sslp (mew-imap-ssl case))
+	 (stunnelp (mew-stunnel-p (mew-imap-ssl case)))
 	 (sslport (mew-imap-ssl-port case))
-	 (sslnp (mew-ssl-native-p (mew-imap-ssl case)))
+	 (gnutlsp (mew-gnutls-p (mew-imap-ssl case)))
 	 (starttlsp
-	  (mew-ssl-starttls-p (mew-imap-ssl case)
-			      (mew-*-to-string (mew-imap-port case))
-			      (mew-imap-ssl-port case)))
+	  (mew-starttls-p (mew-imap-ssl case)
+			  (mew-*-to-string (mew-imap-port case))
+			  (mew-imap-ssl-port case)))
 	 (proxysrv (mew-imap-proxy-server case))
 	 (proxyport (mew-imap-proxy-port case))
 	 ;; dirty but necessary for migration
@@ -1319,37 +1318,39 @@
 	 (pnm (mew-imap-info-name case mailbox))
 	 (buf (get-buffer-create (mew-imap-buffer-name pnm)))
 	 (no-msg (eq directive 'biff))
-	 process sshname sshpro sslname sslpro lport info jobs tls
-	 virtual-info disp-info virtual)
+	 process sshname sshpro sslname sslpro lport info jobs protocol pro-plist
+	 virtual-info disp-info virtual secure)
     (if (mew-imap-get-process pnm)
 	(message "Another IMAP process is running. Try later")
       (cond
-       (sslnp
+       (gnutlsp
 	(let ((serv (if starttlsp port sslport)))
-	  (setq process (mew-imap-open pnm case server serv no-msg starttlsp))))
+	  (setq pro-plist (mew-imap-open pnm case server serv no-msg starttlsp))))
        (sshsrv
 	(setq sshpro (mew-open-ssh-stream case server port sshsrv))
 	(when sshpro
 	  (setq sshname (process-name sshpro))
 	  (setq lport (mew-ssh-pnm-to-lport sshname))
 	  (when lport
-	    (setq process (mew-imap-open pnm case "localhost" lport no-msg nil)))))
-       (sslp
-	(when starttlsp (setq tls mew-tls-imap))
-	(setq sslpro (mew-open-ssl-stream case server sslport tls))
+	    (setq pro-plist (mew-imap-open pnm case "localhost" lport no-msg nil)))))
+       (stunnelp
+	(when starttlsp (setq protocol mew-stunnel-protocol-imap))
+	(setq sslpro (mew-open-stunnel-stream case server sslport protocol))
 	(when sslpro
 	  (setq sslname (process-name sslpro))
 	  (setq lport (mew-ssl-pnm-to-lport sslname))
 	  (when lport
-	    (setq process (mew-imap-open pnm case mew-ssl-localhost lport no-msg nil)))))
+	    (setq pro-plist (mew-imap-open pnm case mew-stunnel-localhost lport no-msg nil)))))
        (proxysrv
-	(setq process (mew-imap-open pnm case proxysrv proxyport no-msg nil)))
+	(setq pro-plist (mew-imap-open pnm case proxysrv proxyport no-msg nil)))
        (t
-	(setq process (mew-imap-open pnm case server port no-msg nil))))
+	(setq pro-plist (mew-imap-open pnm case server port no-msg nil))))
+      (setq process (car pro-plist))
       (if (null process)
 	  (when (eq directive 'exec)
 	    (mew-imap-exec-recover bnm))
-	(mew-summary-lock process "IMAPing" (or sshpro sslp))
+	(setq secure (or sshpro stunnelp gnutlsp))
+	(mew-summary-lock process "IMAPing" secure)
 	(mew-sinfo-set-summary-form (mew-get-summary-form bnm))
 	(mew-sinfo-set-summary-column (mew-get-summary-column bnm))
 	(mew-sinfo-set-unread-mark nil)
@@ -1361,7 +1362,7 @@
 	(mew-imap-set-process pnm process)
 	(mew-imap-set-ssh-process pnm sshpro)
 	(mew-imap-set-ssl-process pnm sslpro)
-	(mew-imap-set-ssl-p pnm sslp)
+	(mew-imap-set-secure pnm secure)
 	(mew-imap-set-server pnm server)
 	(mew-imap-set-port pnm port)
 	(mew-imap-set-user pnm user)
@@ -1401,16 +1402,16 @@
 	  (when virtual
 	    (mew-imap-set-status-buf pnm virtual)
 	    (with-current-buffer virtual
-	      (mew-summary-lock process "IMAPing" (or sshpro sslp)))))
+	      (mew-summary-lock process "IMAPing" (or sshpro stunnelp gnutlsp)))))
 	 ((eq directive 'scan)
 	  (mew-imap-set-range pnm (nth 0 args))
 	  (mew-imap-set-get-body pnm (nth 1 args))
 	  (mew-sinfo-set-unread-mark (mew-get-unread-mark bnm))
 	  (if (mew-imap-get-range pnm)
 	      (progn
-;;		(mew-imap-set-mdb pnm (mew-summary-mark-collect4))
+		;;		(mew-imap-set-mdb pnm (mew-summary-mark-collect4))
 		(mew-net-folder-clean))
-;;	    (mew-imap-set-mdb pnm (mew-summary-mark-collect5))
+	    ;;	    (mew-imap-set-mdb pnm (mew-summary-mark-collect5))
 	    (mew-net-invalid-cache-invisible))
 	  (when (and (string= mailbox mew-imap-inbox-string)
 		     (or (mew-imap-spam-pattern case)
@@ -1445,15 +1446,9 @@
 	(set-process-filter process 'mew-imap-filter)
 	(set-process-buffer process buf)
 	;;
-	(when sslnp
-	  ;; GnuTLS receives IMAP greeting in its internals
-	  ;; and passes it as a return value.
-	  ;; We store the value in the variable mew--gnutls-imap-greeting
-	  ;; and pass it to the filter to process the greeting.
-	  (mew-imap-filter process
-			  (string-replace "\r\n" "\n"
-					  mew--gnutls-imap-greeting)))
-	))))
+	(when (and gnutlsp starttlsp)
+	  (let ((greeting (plist-get (cdr pro-plist) :greeting)))
+	    (if (stringp greeting) (mew-imap-filter process greeting))))))))
 
 (defun mew-imap-exec-recover (bnm)
   (mew-summary-visible-buffer bnm)
@@ -1567,7 +1562,7 @@
 (defun mew-imap-mark-recover (mdb)
   (let ((opos (point))
 	(case-fold-search nil)
-	msg mrk omrk)
+	(msg nil) (mrk nil) omrk)
     (goto-char (point-min))
     (dolist (ent mdb)
       (mew-set '(msg mrk) ent)

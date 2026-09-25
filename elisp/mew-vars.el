@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; mew-vars.el --- Variables and Constants for Mew
 
 ;; Author:  Mew developing team
@@ -168,7 +169,7 @@ really deleted."
   :type '(choice string (const nil)))
 
 (defcustom mew-trash-folder-list nil
-  "*A list of folders whose messages marked with 'D' are really deleted."
+  "*A list of folders whose messages marked with `D' are really deleted."
   :group 'mew-summary
   :type '(choice (const nil) (repeat string)))
 
@@ -414,7 +415,7 @@ Note that this hook is called after composition of the message."
 
 (defcustom mew-summary-delete-folder-hook nil
   "*Hook called when a folder deleted.
-Eash function is called with a deleted folder as the argument."
+Each function is called with a deleted folder as the argument."
   :group 'mew-summary
   :type 'hook)
 
@@ -541,7 +542,7 @@ i.e. \"Friendly name <user@mail-domain>\"."
      ("Cc:" "To:" "Cc:" "Apparently-To:")))
   "*Alist to be used to prepare To:/Cc:/Newsgroups: in a reply draft.
 For most cases, this alist is used.
-For more infomation, see the document of '\\<mew-summary-mode-map>\\[mew-summary-reply]'")
+For more information, see the document of '\\<mew-summary-mode-map>\\[mew-summary-reply]'")
 
 (defvar mew-reply-sender-alist
   '(("Reply-To:"
@@ -550,7 +551,7 @@ For more infomation, see the document of '\\<mew-summary-mode-map>\\[mew-summary
      ("To:" "From:")))
   "*Alist to be used to prepare To:/Cc:/Newsgroups: in a reply draft.
 When `\\[universal-argument]' is specified for `\\<mew-summary-mode-map>\\[mew-summary-reply]' and `\\[mew-summary-reply-with-citation]', this alist is used.
-For more infomation, see the document of `\\[mew-summary-reply]'")
+For more information, see the document of `\\[mew-summary-reply]'")
 
 (defvar mew-reply-fromme-alist
   '((t
@@ -559,7 +560,7 @@ For more infomation, see the document of `\\[mew-summary-reply]'")
      ("Newsgroups:" "Newsgroups:")))
   "*Alist to be used to prepare To:/Cc:/Newsgroups: in a reply draft.
 When the message to be replied is sent/posted by ME, this alist is used.
-For more infomation, see the document of `\\<mew-summary-mode-map>\\[mew-summary-reply]'")
+For more information, see the document of `\\<mew-summary-mode-map>\\[mew-summary-reply]'")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -587,7 +588,7 @@ is kept for further connections. This must be `t' for IMAP and NNTP."
 ;; XXX: the default value of gnutls-trustfiles can
 ;; be different from the compile-time list.
 (defcustom mew-ssl-trustfiles nil
-  "List of CA buldle location filenames used by GnuTLS.
+  "List of CA bundle location filenames used by GnuTLS.
 nil - use the default list specified at compile time of the Emacs."
   :group 'mew-net
   :type '(choice (const :tag "System Default" nil)
@@ -618,8 +619,8 @@ server, set an appropriate value."
   :group 'mew-smtp
   :type 'string)
 
-(defcustom mew-smtp-port "smtp"
-  "*The SMTP port. (e.g. \"smtp\" or 25)"
+(defcustom mew-smtp-port "submission"
+  "*The SMTP port. (e.g. \"submission\" or 587)"
   :group 'mew-smtp
   :type 'string)
 
@@ -643,8 +644,8 @@ tunnel - Use an external program to establish a TLS tunnel.
 		 (const :tag "External (stunnel)" tunnel)))
 
 (defcustom mew-smtp-ssl-port 465 ;; RFC 8314
-  "*The port for SMTP over SSL/TLS. Set this to \"smtp\" if you
-want to use TLS."
+  "*The port for SMTP over SSL/TLS. Set this to mew-smtp-port if you
+want to use STARTTLS."
   :group 'mew-smtp
   :type 'string)
 
@@ -1354,9 +1355,9 @@ of the From: field is used."
                          (const address) (const nickname))))
 
 (defcustom mew-summary-form-mark-delete nil
-  "*If non-nil, the 'D' mark automatically is put onto
+  "*If non-nil, the `D' mark automatically is put onto
 duplicated messages. If a character, use it as a mark
-instead of the 'D' mark."
+instead of the `D' mark."
   :group 'mew-summary
   :type '(choice (const :tag "Use mew-mark-delete" t)
 		 (const :tag "Not use" nil)
@@ -1952,9 +1953,9 @@ If you cite a message, the citation style of format=flowed is used. "
   "*Ratio of windows"
   :group 'mew-env
   :type '(list
-           (list (const summary) (list integer integer))
-           (list (const message) (list integer integer))
-           (list (const draft) (list integer integer))))
+          (list (const summary) (list integer integer))
+          (list (const message) (list integer integer))
+          (list (const draft) (list integer integer))))
 
 (defcustom mew-mode-line-id "Mew: %12b"
   "*A default value of mode-line-buffer-identification for each Mew mode."
@@ -2744,11 +2745,7 @@ Otherwise, the old cases are overridden."
 ;;;
 
 (defcustom mew-temp-file-initial
-  (expand-file-name (user-login-name) (if (fboundp 'temp-directory)
-					  (temp-directory)
-					(if (boundp 'temporary-file-directory)
-					    temporary-file-directory
-					  "/tmp")))
+  (expand-file-name (user-login-name) temporary-file-directory)
   "*Hint to make a secure directory on the local file system. On
 setup phase Mew make a secure directory from this variable and set
 mew-temp-file a file name prefix contained the directory name. The
@@ -2816,7 +2813,7 @@ Its format is key:mode where more is found in `mew-sort-mode'."
 of a specific folder. An example is follows:
 \(setq mew-sort-default-key-alist
       \\='((\"+tmp/beginners\" \"x-sequence\")
-        (\"+tmp/elips\" \"x-mail-count\")))"
+        (\"+tmp/elisp\" \"x-mail-count\")))"
   :group 'mew-summary
   :type '(list (list string string)))
 
@@ -2917,6 +2914,21 @@ in Summary/Virtual mode."
   "*Invert an X-Face: image in Message mode."
   :group 'mew-highlight
   :type 'boolean)
+
+(defcustom mew-use-highlight-bimi mew-icon-p
+  "*If non-nil, display BIMI logo in Message mode."
+  :group 'mew-highlight
+  :type 'boolean)
+
+(defcustom mew-use-bimi-status-check t
+  "*If non-nil, check BIMI status before displaying BIMI logo."
+  :group 'mew-highlight
+  :type 'boolean)
+
+(defcustom mew-bimi-logo-size 24
+  "*Number of BIMI logo size."
+  :group 'mew-highlight
+  :type 'integer)
 
 ;;;
 ;;; Styles and colors
@@ -3053,7 +3065,7 @@ You should choose `pgp' or `smime'."
 (defcustom mew-protect-privacy-always-type 'pgp-signature
   "*A type of privacy protection for all drafts.
 Currently, `pgp-signature', `pgp-encryption', `pgp-signature-encryption',
-`pgp-encryption-signatur'e, and nil are available. Since signature
+`pgp-encryption-signature', and nil are available. Since signature
 does not require receiver\\='s public key, signature service may be
 appropriate for this value."
   :group 'mew-privacy
@@ -3288,7 +3300,7 @@ Bad example:
 
 \(3) Decode invalid MIME parameters, which violates RFC 2231.
 \(i)  Raw text.
-\(ii) Encorded-word defined in RFC 2047.
+\(ii) Encoded-word defined in RFC 2047.
 
 Good example:
 	Content-Disposition: attachment;

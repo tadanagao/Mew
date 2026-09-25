@@ -1,6 +1,44 @@
 # Release note
 
-This is stable releases of Mew 6.9.
+This is stable releases of Mew 6.11.
+
+## Differences between Mew 6.11 and Mew 6.10
+
+* Mew now supports Emacs 27.1 or later only.  `mew-time-rfc-to-sortkey`
+  ignores the time zone on Emacs 26 because `encode-time` there does not
+  accept a single list argument.
+* Supporting coming Emacs 31.
+* Removing fallback code from the "submission" port to the "smtp" port.
+* `mew-smtp-port` is now defined as `"submission"` instead of `"smtp"`.
+* Remove STARTTLS parameters for non-STARTTLS connections with GnuTLS
+  [#212](github.com/kazu-yamamoto/Mew/pull/212)
+* Fix: BIMI logo color
+  [#210](github.com/kazu-yamamoto/Mew/pull/210)
+* Support "BIMI-Indicator:" Header
+  [#208](github.com/kazu-yamamoto/Mew/pull/208)
+* Hiding UI-* in Message Mode
+  [#204](https://github.com/kazu-yamamoto/Mew/pull/204)
+* Fix master password issues. New protocol passwords are saved when
+  entered.
+
+## Differences between Mew 6.10 and Mew 6.9
+
+* XOAUTH2 support. Please see Sec 9.13 of the manual.
+* Use C.UTF-8 if available to display non-ASCII names for GnuPG
+  programs.
+  [#179](https://github.com/kazu-yamamoto/Mew/pull/179)
+* Enable IPv6 support of stunnel by default.
+  [#177](https://github.com/kazu-yamamoto/Mew/pull/177)
+* Add GnuTLS support.
+  [#175](https://github.com/kazu-yamamoto/Mew/pull/175)
+* Supporting stunnel >=5.15 only.
+  [#174](https://github.com/kazu-yamamoto/Mew/pull/174)
+* Separately check if stunnel supports 'foreground', 'pid' and
+  'syslog' options.
+  [#171](https://github.com/kazu-yamamoto/Mew/pull/170)
+* Use configured file names as relative paths from mew-home.
+  [#170](https://github.com/kazu-yamamoto/Mew/pull/170)
+* And several bug fixes.
 
 ## Differences between Mew 6.9 and Mew 6.8
 

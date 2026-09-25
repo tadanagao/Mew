@@ -1,9 +1,14 @@
+;;; -*- lexical-binding: t; -*-
 ;;; mew-passwd.el
 
 ;; Author:  Mew developing team
 ;; Created: May 23, 2006
 
 ;;; Code:
+
+(eval-when-compile
+  (declare-function auth-source-delete "auth-source.el")
+  (declare-function auth-source-forget+ "auth-source.el"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -15,6 +20,11 @@
 (defvar mew-passwd-cipher "AES")
 (defvar mew-passwd-repeat 3)
 
+(defvar mew-passwd-load-args (list "-d")
+  "arguments of `mew-prog-passwd' to load master password file")
+(defvar mew-passwd-save-args (list "-c" "--cipher-algo" mew-passwd-cipher)
+  "arguments of `mew-prog-passwd' to save master password file")
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Internal variables
@@ -23,7 +33,12 @@
 (defvar mew-passwd-encryption-name "GPG Encryption")
 (defvar mew-passwd-decryption-name "GPG Decryption")
 
-(defvar mew-passwd-master nil)
+(defvar mew-passwd-master nil
+  "This variable is basically a string of master password.
+For symmetric key encryption, this is used both for encryption (saving)
+and decryption (loading). However, for asymmetric key encryption, this
+is used only for decryption (loading). After loading passwords,
+this variable is set to \='t\=`.")
 (defvar mew-passwd-alist nil)
 (defvar mew-passwd-timer-id nil)
 (defvar mew-passwd-rendezvous nil)
@@ -55,6 +70,10 @@
 
 (autoload 'auth-source-search "auth-source")
 
+;; Declared, not required, so that the let below is a dynamic binding
+;; even when this file is compiled with lexical-binding.
+(defvar epg-pinentry-mode)
+
 (defun mew-passwd-use-auth-source-p ()
   (eq mew-master-passwd-type 'auth-source))
 
@@ -75,14 +94,14 @@
 	   :host nil
 	   :port nil)))
 
-;;; XXX epa-pinentry-mode is set to 'loopback to avoid GUI pinentry
+;;; XXX epg-pinentry-mode is set to 'loopback to avoid GUI pinentry
 ;;; window.  This might not be a recommended way but it works.
 ;;;
 ;;; XXX when the backend is an encrypted file and an wrong passphrase
 ;;; is provided, a password prompt will be displayed.  This may be
 ;;; confusing.
 (defun mew-passwd-auth-source-get-passwd (key)
-  (let* ((epa-pinentry-mode 'loopback)
+  (let* ((epg-pinentry-mode 'loopback)
 	 (slist (mew-passwd-auth-source-parse-key key))
 	 found)
     (cond
@@ -90,7 +109,7 @@
       ;; Never get GnuPG passphrase.  Rely on gpg-agent for caching.
       (setq found nil))
      (t
-      (condition-case error
+      (condition-case nil
 	  (setq found (apply #'auth-source-search (nconc slist)))
 	(error
 	 (setq found nil)))))
@@ -108,7 +127,7 @@
     )
    (val
     ;; Authenticated successfully.
-    (let* ((epa-pinentry-mode 'loopback)
+    (let* ((epg-pinentry-mode 'loopback)
 	   (slist (mew-passwd-auth-source-parse-key key))
 	   (entry (apply #'auth-source-search
 			 (append slist (list
@@ -121,9 +140,8 @@
     ;;
     ;; XXX: removal of the wrong password is not supported by any
     ;;      backends (i.e. auth-source-delete is noop).
-    (let* ((epa-pinentry-mode 'loopback)
+    (let* ((epg-pinentry-mode 'loopback)
 	   (slist (mew-passwd-auth-source-parse-key key))
-	   (num (apply #'auth-source-forget+ (nconc slist)))
 	   (entry (apply #'auth-source-delete (nconc slist)))
 	   (save-function (plist-get (nth 0 entry) :save-function)))
       (when (functionp save-function)
@@ -189,18 +207,15 @@
     )
    (t
     (when (and (not mew-passwd-master) mew-use-master-passwd)
-    (setq mew-passwd-agent-hack (mew-passwd-check-agent-hack))
-    (let ((file (expand-file-name mew-passwd-file mew-conf-path)))
-      (if (file-exists-p file)
-	  (setq mew-passwd-alist (mew-passwd-load))
-	;; save nil and ask master twice
-	(mew-passwd-save)))
-    (add-hook 'kill-emacs-hook 'mew-passwd-clean-up)))))
+      (setq mew-passwd-agent-hack (mew-passwd-check-agent-hack))
+      (let ((file (expand-file-name mew-passwd-file mew-conf-path)))
+	(if (file-exists-p file)
+	    (setq mew-passwd-alist (mew-passwd-load))
+	  (mew-passwd-read-master-passwd)))
+      (add-hook 'kill-emacs-hook 'mew-passwd-clean-up)))))
 
 (defun mew-passwd-clean-up ()
   (remove-hook 'kill-emacs-hook 'mew-passwd-clean-up)
-  (when mew-passwd-master
-    (mew-passwd-save))
   (setq mew-passwd-master nil)
   (when (and mew-use-cached-passwd (not mew-use-master-passwd))
     (setq mew-passwd-alist nil)
@@ -238,6 +253,8 @@
 	  (let ((pass (mew-read-passwd prompt)))
 	    (mew-passwd-set-passwd key pass)
 	    (mew-passwd-set-counter key 0)
+	    (when mew-passwd-master
+	      (mew-passwd-save))
 	    pass)))
     (mew-read-passwd prompt)))
 
@@ -261,11 +278,28 @@
       (unless encrypt-p (setq mew-passwd-master pass))
       pass)))
 
+(defun mew-passwd-read-master-passwd ()
+  (catch 'loop
+    (while t
+      (let ((pass (mew-passwd-read-passwd2)))
+	(when pass
+	  (setq mew-passwd-master pass)
+	  (throw 'loop nil))))))
+
+(defun mew-passwd-read-passwd2 ()
+  (let ((pass1 (mew-read-passwd "New master password: "))
+	(pass2 (mew-read-passwd "New master password again: ")))
+    (if (string= pass1 pass2)
+	pass1
+      nil)))
+
 (defun mew-passwd-change ()
   "Change the master password."
   (interactive)
   (setq mew-passwd-master nil)
-  (mew-passwd-save))
+  (mew-passwd-read-master-passwd)
+  (mew-passwd-save)
+  (message "Master password changed and passwords are saved"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -285,7 +319,9 @@
   (let* ((process-connection-type mew-connection-type2)
 	 (file (expand-file-name mew-passwd-file mew-conf-path))
 	 (tfile (mew-make-temp-name "gpg-load"))
-	 (args (mew-passwd-adjust-args (list "-d" "--yes" "--output" tfile file)))
+	 (args (mew-passwd-adjust-args (append
+					mew-passwd-load-args
+					(list "--yes" "--output" tfile file))))
 	 (N mew-passwd-repeat)
 	 pwds pro)
     (unwind-protect
@@ -301,8 +337,10 @@
 	      (set-process-filter   pro 'mew-passwd-filter)
 	      (set-process-sentinel pro 'mew-passwd-sentinel)
 	      (mew-passwd-rendezvous pro)
-	      (unless (file-exists-p tfile)
-		(setq mew-passwd-master nil))
+	      (if (file-exists-p tfile)
+		  (unless mew-passwd-master
+		    (setq mew-passwd-master t)) ;; load success but master password isn't cached
+		(setq mew-passwd-master nil)) ;; load fail
 	      (when mew-passwd-master
 		(let ((coding-system-for-read 'undecided))
 		  (insert-file-contents tfile))
@@ -319,9 +357,9 @@
   (let* ((process-connection-type mew-connection-type2)
 	 (file (expand-file-name mew-passwd-file mew-conf-path))
 	 (tfile (mew-make-temp-name "gpg-save"))
-	 (args (mew-passwd-adjust-args (list "-c"
-					     "--cipher-algo" mew-passwd-cipher
-					     "--yes" "--output" file tfile)))
+	 (args (mew-passwd-adjust-args (append
+					mew-passwd-save-args
+					(list "--yes" "--output" file tfile))))
 	 (N mew-passwd-repeat)
 	 pro)
     (if (file-exists-p file)
@@ -354,6 +392,7 @@
 ;;;
 
 (defun mew-passwd-filter (process string)
+  (mew-passwd-debug "passwd filter" string)
   (let* ((name (process-name process))
 	 (regex (concat "^" (regexp-quote mew-passwd-encryption-name)))
 	 (encrypt-p (string-match regex name)))
@@ -394,7 +433,7 @@
 
 (defun mew-passwd-get-cache-id (file)
   (with-temp-buffer
-    (call-process mew-prog-passwd nil t nil "--list-packets" file)
+    (apply 'call-process mew-prog-passwd nil t nil (mew-passwd-adjust-args (list "--list-packets" "--passphrase" "" file)))
     (goto-char (point-min))
     (when (re-search-forward "salt \\([^ ,]+\\)," nil t)
       (concat "S" (match-string 1)))))
@@ -402,14 +441,22 @@
 (defun mew-passwd-clear-passphrase (file)
   (when (file-exists-p file)
     (let ((cache-id (mew-passwd-get-cache-id file)))
-      (with-temp-buffer
-	(insert "CLEAR_PASSPHRASE " cache-id "\n")
-	(call-process-region (point-min) (point-max) "gpg-connect-agent")))))
+      (when cache-id
+	(with-temp-buffer
+	  (insert "CLEAR_PASSPHRASE " cache-id "\n")
+	  (call-process-region (point-min) (point-max) "gpg-connect-agent"))))))
 
 (defun mew-passwd-adjust-args (args)
   (if mew-passwd-agent-hack
+      ;; password is asked just once when encrypting
       (cons "--pinentry-mode" (cons "loopback" args))
     args))
+
+(defun mew-passwd-debug (label string)
+  (when (mew-debug 'passwd-debug)
+    (with-current-buffer (get-buffer-create mew-buffer-debug)
+      (goto-char (point-max))
+      (insert (format "\n<%s>\n%s\n" label string)))))
 
 (provide 'mew-passwd)
 

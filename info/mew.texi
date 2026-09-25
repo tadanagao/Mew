@@ -10,28 +10,27 @@
 
 @ifset ja
 @c Mew の texinfo
-@c Copyright (C) 1996-2023 Mew developing team.
+@c Copyright (C) 1996-2026 Mew developing team.
 @c M-x texinfo-format-buffer で info にしてね。
 @end ifset
 @ifset en
 @c Texinfo for Mew
-@c Copyright (C) 1996-2023 Mew developing team.
+@c Copyright (C) 1996-2026 Mew developing team.
 @c Try "M-x texinfo-format-buffer" or makeinfo to get the Info.
 @end ifset
 
-@set version 6.9
-@set modified 2023/02/11
-@set X-Mailer Mew version 6.9 on Emacs 28.2
+@set version 6.11
+@set modified 2026/04/16
+@set X-Mailer Mew version 6.11 on Emacs 30.2
 
 @titlepage
 @sp 10
-@center
 @title Mew
 @ifset ja
-@author Copyright @copyright{}1996-2023 Mew developing team.
+@author Copyright @copyright{}1996-2026 Mew developing team.
 @end ifset
 @ifset en
-@author Copyright @copyright{}1996-2023 Mew developing team.
+@author Copyright @copyright{}1996-2026 Mew developing team.
 @end ifset
 @end titlepage
 
@@ -294,11 +293,11 @@ the name.
 @end ifset
 
 @ifset ja
-Emacs 26.1 以降を使って下さい。これらより前のバージョンや XEmacs は、サ
+Emacs 27.1 以降を使って下さい。これらより前のバージョンや XEmacs は、サ
 ポートしていません。
 @end ifset
 @ifset en
-Please use Emacs 26.1 or later. Mew doesn't support earlier versions
+Please use Emacs 27.1 or later. Mew doesn't support earlier versions
 nor XEmacs.
 @end ifset
 
@@ -1564,16 +1563,16 @@ Text/Xml の取扱い。@samp{nil} の場合は XML を解析せずに表示。�
 The size limit of messages to be analyzed. If the size of a message is
 less than or equal to this value, it is analyzed and displayed.
 Otherwise, the raw message is displayed without analysis. The default
-value is 10000 bytes.
+value is 100000 bytes.
 @item mew-header-max-length
 The length limit of header to be analyzed. If the length of a header is
 less than or equal to this value, it is analyzed and displayed.
-Otherwise, the message is displayed as fragmentarily since the analysis
+Otherwise, the message is displayed fragmentarily since the analysis
 is stopped. The default value is 100 lines.
 @item mew-decode-broken
 Whether Mew be liberal or conservative to invalid messages. If the value
 is @samp{t}, the setting is liberal. If the value is @samp{nil}, the
-setting is for conservative. If conservative and invalid portions are
+setting is conservative. If conservative and invalid portions are
 found, they are reported in the X-Mew: field. The default value is
 @samp{t}.
 @item mew-use-text-body
@@ -2873,7 +2872,7 @@ Toggle warning level. If @samp{mew-warning-field-level} is 2, set it to
 @ifset en
 @section Invalid messages
 @end ifset
-@vindex mew-decode-quoted
+@vindex mew-decode-broken
 @kindex C-u. (Summary)
 @kindex C-cC-l (Summary)
 @kindex C-uC-cC-l (Summary)
@@ -4470,7 +4469,7 @@ on connection fees and repeated authentication for sending.
 @item C-cC-c
 Send messages in +queue. Method is appropriate if you like to preview
 composed messages first in +queue and then send them. If
-@samp{mew-ask-flush-queue} is @samp{t}, you are asked, Flush queue? (y
+@samp{mew-ask-flush-queue} is @samp{t}, you are asked, "Flush queue? (y
 or n) ". @samp{mew-ask-flush-queue} is default to @samp{nil}.
 @end ifset
 @end table
@@ -4653,7 +4652,7 @@ the header and the body
 @kindex C-f (Attach)
 @kindex C-b (Attach)
 @kindex c (Attach)
-@kindex i (Attach)
+@kindex l (Attach)
 @kindex d (Attach)
 @kindex m (Attach)
 @kindex f (Attach)
@@ -4665,6 +4664,7 @@ the header and the body
 @kindex D (Attach)
 @kindex T (Attach)
 @kindex t (Attach)
+@kindex I (Attach)
 @kindex C (Attach)
 @kindex P (Attach)
 
@@ -4840,7 +4840,7 @@ The following is a summary of commands in the attachments region.
 ルをコピーする場合は、"/[user@@]hostname:/filepath" の形式でファイルを指
 定。
 @item l
-ファイルへシンボッリクリンクを張る。"." 上で有効。添付ファイルを 
+ファイルへシンボリックリンクを張る。"." 上で有効。添付ファイルを 
 @samp{f} を使って読み込んで編集する場合は、実体を編集してしまわないよう
 に、@samp{l} ではなく @samp{c} でコピーすべき。
 @item d
@@ -6944,7 +6944,7 @@ Exactly speaking, the following rule is applied for local folders.
 @item If @samp{mew-trash-folder-list} is defined, messages marked with
 @samp{D} in one of the folders defined in it are deleted. Otherwise,
 they are moved to the trash.
-@item If @samp{mew-trash-folder-list} is @samp{nl},
+@item If @samp{mew-trash-folder-list} is @samp{nil},
 messages marked with @samp{D} in @samp{mew-trash-folder} are deleted.
 Otherwise, they are moved to the trash. (This is default.)
 @end ifset
@@ -7629,7 +7629,7 @@ Mew がマークの整合性を取る方法を以下に示します。
 @end ifset
 @ifset en
 To allow off-line operations, Mew synchronizes marks with an IMAP
-server everytime when a user makes an action. Mew does not
+server every time when a user makes an action. Mew does not
 automatically synchronize marks repeatedly. The followings are how Mew
 synchronizes marks.
 @end ifset
@@ -8298,7 +8298,7 @@ messages. If you want to limit it to 3000 messages, put the following to
 @end ifset
 @ifset en
 The function name to provide this feature is
-@samp{mew-refile-guess-by-message-id}.
+@samp{mew-refile-guess-by-thread}.
 @end ifset
 
 @c %%%%%%%%%%%%%%%%%
@@ -8942,7 +8942,7 @@ Virtual モードからマークを処理することはできません。@samp{
 @ifset en
 You cannot process marks in Virtual mode. Even if you type @samp{x} to
 process marks in Virtual mode, the cursor moves to corresponding
-Summary mode, if exsists, and you are asked to type @samp{x} again.
+Summary mode, if exists, and you are asked to type @samp{x} again.
 @end ifset
 
 @ifset ja
@@ -9055,7 +9055,7 @@ asked to input the field name as follows:
 @end ifset
 
 @example
-Sort by? (default date): 
+Sort by? (date):
 @end example
 
 @ifset ja
@@ -9229,7 +9229,7 @@ To use the feature of dialog, execute @samp{kI} to create
 database. Since new messages are not automatically registered into the
 database, you should periodically execute @samp{kI}. @samp{kI} updates
 the database incrementally by default. This method is fast but
-garbages are left. So, sometime you should type @samp{C-ukI} to update
+garbage is left. So, sometime you should type @samp{C-ukI} to update
 the database fully.
 @end ifset
 
@@ -9334,6 +9334,26 @@ to a specified pattern. If you want to specify multiple folders,
 separate them with ",". You can also use a wildcard "*".
 @end ifset
 @end table
+
+@ifset ja
+@samp{?} と @samp{/} は、メールのファイルをそのままの形で走査します。ヘッ
+ダの非 ASCII 文字は RFC 2047 にしたがって符号化されており、本文も Base64
+などで符号化されていることが多いので、日本語などを指定しても見つかりませ
+ん。これらで探せるのは ASCII だけです。
+
+検索エンジンを使う @samp{k?} と @samp{k/} は、符号化を解いた後の内容に対
+して索引を作ります。よって、非 ASCII の文字列はこちらで探して下さい。
+@end ifset
+@ifset en
+@samp{?} and @samp{/} read the message files as they are. Non-ASCII
+characters in a header are encoded as RFC 2047 says, and a body is
+often encoded with Base64 or the like, so a pattern which is not ASCII
+matches nothing. Only ASCII can be found with them.
+
+The search engines behind @samp{k?} and @samp{k/} index a message
+after its encodings are undone. So, look for a non-ASCII string with
+those instead.
+@end ifset
 
 @c %%%%%%%%%%%%%%%%%
 @node condition, dbsearch, search, Virtual
@@ -9698,7 +9718,7 @@ A reverse version of @samp{C-uM-n}.
 @kindex ( (Virtual)
 @kindex ) (Virtual)
 @kindex t* (Virtual)
-@kindex t@ (Virtual)
+@kindex t$ (Virtual)
 @kindex td (Virtual)
 @kindex tM-d (Virtual)
 @kindex to (Virtual)
@@ -10560,7 +10580,7 @@ follows:
 これを "xdg-open" に変更するには以下のようにします。
 @end ifset
 @ifset en
-If you want to set it to "xdg-open", for instace, do like this:
+If you want to set it to "xdg-open", for instance, do like this:
 @end ifset
 
 @lisp
@@ -11535,8 +11555,8 @@ POP の認証方式。@samp{'pass} は USER/PASS (生パスワード)、@samp{'a
 は APOP、@samp{t} は @samp{mew-pop-auth-list} に従った SASL を意味する。
 初期値は @samp{'apop}。
 @item mew-pop-auth-list
-SASL で利用する認証方式のリスト。優先順位の高い順に並べる。現在、
-"CRAM-MD5" が利用可能。
+SASL で利用する認証方式のリスト。優先順位の高い順に並べる。
+現在、"XOAUTH2",  "CRAM-MD5", "PLAIN" が利用可能。
 @item mew-pop-delete
 POP サーバからメッセージを取得後、POP サーバにあるメッセージを削除するか
 否か。@samp{t} なら削除。@samp{nil} なら削除しない。数値 N なら、最初の
@@ -11572,8 +11592,8 @@ USER/PASS (i.e. plain password). @samp{'apop} means the authentication with
 APOP. @samp{t} means SASL according to @samp{mew-pop-auth-list}. The
 default is @samp{'apop}.
 @item mew-pop-auth-list
-A list of SASL methods in the preferred order. Currently, "CRAM-MD5"
-can be used.
+A list of SASL methods in the preferred order.
+Currently, "XOAUTH2", "CRAM-MD5" and "PLAIN" can be used.
 @item mew-pop-delete
 Whether or not delete messages on a POP server after retrieval by POP.
 If @samp{t}, delete the messages. If @samp{nil}, retain the messages.
@@ -11629,8 +11649,8 @@ IMAP のアカウント名。初期値はログイン名。
 IMAP の認証方式。@samp{nil} は LOGIN (生パスワード)、@samp{t} は 
 @samp{mew-imap-auth-list} に基づいた SASL を意味する。初期値は @samp{t}。
 @item mew-imap-auth-list
-SASL で利用する認証方式のリスト。優先順位の高い順に並べる。現在、
-"CRAM-MD5" と "LOGIN" が利用可能。
+SASL で利用する認証方式のリスト。優先順位の高い順に並べる。
+現在、"XOAUTH2",  "CRAM-MD5", "LOGIN" が利用可能。
 @item mew-imap-delete
 IMAP サーバからメッセージを取得後、IMAP サーバにあるメッセージを削除するか
 否か。@samp{t} なら削除。@samp{nil} なら削除しない。数値 N なら、最初の
@@ -11663,7 +11683,7 @@ LOGIN (i.e. plain password). @samp{t} means SASL according to
 @samp{mew-imap-auth-list}. The default is @samp{t}.
 @item mew-imap-auth-list
 A list of SASL methods in the preferred order.
-Currently, "CRAM-MD5" and "LOGIN" can be used.
+Currently, "XOAUTH2", "CRAM-MD5" and "LOGIN" can be used.
 @item mew-imap-delete
 Whether or not delete messages on an IMAP server after retrieval by
 IMAP. If @samp{t}, delete the messages. If @samp{nil}, retain the
@@ -11786,7 +11806,7 @@ message-id = *random*.nntp-msgid-user@@nntp-msgid-domain
 
 @ifset ja
 Mew では、メッセージを送信する際に SMTP を利用します。SMTP サーバが認証
-を要求した場合、Mew は自動的にユーザにバスワードの入力を求めます。ここ
+を要求した場合、Mew は自動的にユーザにパスワードの入力を求めます。ここ
 では、SMTP を制御するための以下の変数についてまとめます。
 @end ifset
 @ifset en
@@ -11800,10 +11820,8 @@ password. This section describes following variables to control SMTP.
 @item mew-smtp-server
 SMTP サーバの名前。
 @item mew-smtp-port
-SMTP ポート番号。絶対パス名を指定すると Unix ドメインソケットを
-使用する。
-@item mew-smtp-submission-family
-SMTP サーバと接続する際に用いるアドレスファミリ。初期値は 'ipv4。
+SMTP ポート番号。以前は "smtp"だったが、現在は "submission"に変更
+されている。絶対パス名を指定すると Unix ドメインソケットを使用する。
 @item mew-smtp-ssh-server
 SSH 経由でメッセージを送る際の SSH サーバの名前。
 @item mew-smtp-ssl
@@ -11816,8 +11834,8 @@ SMTP over TLS のポート番号。
 SMTP AUTH で利用されるアカウント名。設定されない場合は、自動的にメール
 アドレスに設定される。
 @item mew-smtp-auth-list
-SMTP AUTH で利用する認証方式のリスト。優先順位の高い順に並べる。初期値
-は、'("CRAM-MD5" "PLAIN" "LOGIN")。
+SMTP AUTH で利用する認証方式のリスト。優先順位の高い順に並べる。
+初期値は、'("XOAUTH2" "CRAM-MD5" "PLAIN" "LOGIN")。
 @item mew-smtp-helo-domain
 SMTP HELO コマンドで使われるサーバ名。初期値は "localhost"。
 @item mew-smtp-mail-from
@@ -11839,10 +11857,9 @@ Message-Id: の書式は以下を参照。
 @item mew-smtp-server
 The name of your SMTP server.
 @item mew-smtp-port
-The port for SMTP.  When an absolute pathname is specified,
-it will be used as a Unix domain socket.
-@item mew-smtp-submission-family
-The address family to be used for the SMTP server.  The default value is 'ipv4.
+The port for SMTP.  The value was originally "smtp" but is currently
+"submission".  When an absolute pathname is specified, it will be used
+as a Unix domain socket.
 @item mew-smtp-ssh-server
 The name of SSH server which forwards the SMTP port.
 @item mew-smtp-ssl
@@ -11856,7 +11873,7 @@ The user name on your SMTP server. If not configured, your e-mail
 address is automatically set.
 @item mew-smtp-auth-list
 A list of SMTP AUTH methods in the preferred order.
-Currently, "CRAM-MD5", "PLAIN", and "LOGIN" can be used.
+Currently, "XOAUTH2", "CRAM-MD5", "PLAIN" and "LOGIN" can be used.
 @item mew-smtp-helo-domain
 An e-mail domain to tell a SMTP server with HELO/EHLO. The default is
 "localhost".
@@ -11888,19 +11905,6 @@ message-id = *random*.smtp-msgid-user@@smtp-msgid-domain
 @end example
 
 @ifset ja
-Message Submission (ポート番号が 587 である送信用の SMTP)を使いたい場合
-は、以下のように設定して下さい。
-@end ifset
-@ifset en
-If you want to use Message Submission (SMTP for submission whose port
-number is 587), configure as follows:
-@end ifset
-
-@lisp
-(setq mew-smtp-port "submission")
-@end lisp
-
-@ifset ja
 送信サーバとの接続に Unix ドメインソケットを使いたい場合は、以下のように
 @samp{mew-smtp-port} に絶対パス名を設定して下さい。
 @end ifset
@@ -11911,19 +11915,6 @@ configure as follows:
 
 @lisp
 (setq mew-smtp-port "/var/run/msp.sock")
-@end lisp
-
-@ifset ja
-送信サーバとの接続に IPv6 を使いたい場合は、以下のように
-@samp{mew-smtp-submission-family} に 'ipv6 を設定して下さい。
-@end ifset
-@ifset en
-If you want to use IPv6 as the transport protocol to connect MTA,
-configure as follows:
-@end ifset
-
-@lisp
-(setq mew-smtp-submission-family 'ipv6)
 @end lisp
 
 @ifset ja
@@ -12082,33 +12073,43 @@ keys.
 @end ifset
 
 @example
-name, user, mail-domain, 
-cc, fcc, dcc, reply-to, organization, header-alist, proto, 
-smtp-server, smtp-port, smtp-ssh-server, smtp-ssl, smtp-ssl-port, 
-smtp-user, smtp-auth-list, 
-smtp-msgid-user, smtp-msgid-domain, smtp-helo-domain, smtp-mail-from, 
-pop-server, pop-port, pop-ssh-server, pop-ssl, pop-ssl-port, 
-pop-user, pop-auth, pop-auth-list, 
+name, user, mail-domain,
+cc, bcc, fcc, dcc, reply-to, organization, header-alist, proto,
+use-x-mailer, use-format-flowed,
+safe-addresses, safe-domains, warn-addresses, warn-domains,
+smtp-server, smtp-port, smtp-ssh-server, smtp-ssl, smtp-ssl-port,
+smtp-user, smtp-auth-list, use-smtp-auth, smtp-auth-plain-authorize-id,
+smtp-msgid-user, smtp-msgid-domain, smtp-helo-domain, smtp-mail-from,
+pop-server, pop-port, pop-ssh-server, pop-ssl, pop-ssl-port,
+pop-user, pop-auth, pop-auth-list,
 pop-size, pop-header-only, pop-delete, pop-body-lines,
 pop-proxy-server, pop-proxy-port,
-imap-server, imap-port, imap-ssh-server, imap-ssl, imap-ssl-port, 
-imap-user, imap-auth, imap-auth-list, 
-imap-size, imap-header-only, imap-delete, 
-imap-trash-folder, imap-queue-folder, imap-spam-field, imap-spam-word,
+imap-server, imap-port, imap-ssh-server, imap-ssl, imap-ssl-port,
+imap-user, imap-auth, imap-auth-list,
+imap-size, imap-header-only, imap-delete,
+imap-inbox-folder, imap-trash-folder, imap-trash-folder-list,
+imap-queue-folder, imap-spam-folder, imap-spam-field, imap-spam-word,
+imap-spam-pattern, imap-friend-folder, imap-prefix-list,
 imap-proxy-server, imap-proxy-port,
-nntp-server, nntp-port, nntp-ssh-server, nntp-ssl, nntp-ssl-port, 
-nntp-user, nntp-size, nntp-header-only, 
-nntp-msgid-user, nntp-msgid-domain, 
-prog-ssl-arg, ssl-cert-directory, ssl-verify-level, 
-inbox-folder, queue-folder, postq-folder, 
+nntp-server, nntp-port, nntp-ssh-server, nntp-ssl, nntp-ssl-port,
+nntp-user, nntp-size, nntp-header-only, nntp-newsgroup,
+nntp-msgid-user, nntp-msgid-domain,
+ssh-prog, ssh-prog-args, ssh-prog-ver,
+prog-ssl-arg, ssl-cert-directory, ssl-verify-level,
+ssl-algorithm-priority, ssl-client-keycert-list, ssl-trustfiles,
+ssl-proxy-server, ssl-proxy-port,
+oauth2-client-id, oauth2-client-secret,
+oauth2-redirect-url, oauth2-redirect-port,
+oauth2-auth-url, oauth2-token-url, oauth2-resource-url,
+inbox-folder, queue-folder, postq-folder, inbox-action-alist,
 mailbox-type, mbox-command, mbox-command-arg,
-signature-file, content-type, refile-guess-alist, 
-spam-prog, spam-prog-args, ham-prog, ham-prog-args, 
-use-old-pgp, pgp-signer, smime-signer, privacy-method, 
-protect-privacy-always, protect-privacy-always-type, 
-protect-privacy-encrypted, protect-privacy-encrypted-type, 
-protect-privacy-with-old-pgp-signature,
-use-format-flowed
+signature-file, content-type, refile-guess-alist,
+spam-prog, spam-prog-args, ham-prog, ham-prog-args,
+use-old-pgp, pgp-signer, smime-signer,
+draft-privacy-method,
+protect-privacy-always, protect-privacy-always-type,
+protect-privacy-encrypted, protect-privacy-encrypted-type,
+protect-privacy-with-old-pgp-signature
 @end example
 
 @ifset ja
@@ -12208,7 +12209,7 @@ You can automatically set the "case" in Draft mode.
 @item mew-case-guess-when-composed
 この変数が @samp{t} の場合、メッセージが作成されたときに、
 @samp{mew-case-guess-alist} に従ってケースが設定される。初期値は
-@samp{nil}
+@samp{nil}。
 @item mew-case-guess-when-replied
 この変数が @samp{t} の場合、返答によって草稿が用意されたときに、
 @samp{mew-case-guess-when-replied-alist} に従ってケースが設定される。初
@@ -12318,7 +12319,7 @@ a new format as well as the old format.
 @end ifset
 @ifset en
 @item
-In the old format, sometime "." appears. In the new fomat, no "."
+In the old format, sometime "." appears. In the new format, no "."
 appears at all. For instance, you can write ("foo" "bar") instead of
 ("foo" . "bar").
 @item
@@ -12472,6 +12473,7 @@ configure as follows:
 * addr-warn::                   アドレスの警告
 * biff::                        Biff
 * edit::                        Edit モード
+* xauth2::                      XOAUTH2
 @end ifset
 @ifset en
 * region::                      Region
@@ -12486,6 +12488,7 @@ configure as follows:
 * addr-warn::                   Warning addresses
 * biff::                        Biff
 * edit::                        Edit mode
+* xauth2::                      XOAUTH2
 @end ifset
 @end menu
 
@@ -12690,7 +12693,7 @@ TLS 機能の設定に用いる Mew の設定変数や関数の名前には、 `
 るものです。
 @end ifset
 @ifset en
-For this histrical reason, there are still variables and functions for
+For this historical reason, there are still variables and functions for
 TLS functionality with ``ssl'' keyword in Mew.
 @end ifset
 
@@ -13062,9 +13065,10 @@ TLS connections.  Configure as follows for POP, for instance:
 @end ifset
 
 @lisp
-;; A default value of mew-pop-port is "pop3" (110)
 (setq mew-pop-ssl t)
-(setq mew-pop-ssl-port mew-pop-port) ;; The default is "pop3s" (995)
+;; The default value of mew-pop-ssl-port is "pop3s" (995)
+;; The default value of mew-pop-port is "pop3" (110)
+(setq mew-pop-ssl-port mew-pop-port)
 @end lisp
 
 @ifset ja
@@ -13075,9 +13079,10 @@ The following is an example to enable STARTTLS for Message Submission.
 @end ifset
 
 @lisp
-(setq mew-smtp-port "submission") ;; The default is "smtp" (25)
 (setq mew-smtp-ssl t)
-(setq mew-smtp-ssl-port mew-smtp-port) ;; The default is 465
+;; The default value of mew-smtp-ssl-port is "submissions" (465)
+;; The default value of mew-smtp-port is "submission" (587)
+(setq mew-smtp-ssl-port mew-smtp-port)
 @end lisp
 
 @c %%%%%%%%%%%%%%%%%
@@ -13364,7 +13369,7 @@ non-employee's addresses to red.
 トになります。Mew は以下のルールに従って、警告するアドレスを決めます。
 @end ifset
 @ifset en
-There are four variables to decide which address should trun red.
+There are four variables to decide which address should turn red.
 They are all a list of strings. Mew takes the following rules:
 @end ifset
 
@@ -13497,7 +13502,7 @@ Below is an example to set it to 10 minutes.
 @end lisp
 
 @c %%%%%%%%%%%%%%%%%
-@node edit, Convention, biff, Tips
+@node edit, xauth2, biff, Tips
 @ifset ja
 @section Edit モード
 @end ifset
@@ -13562,7 +13567,7 @@ them, you are asked a folder to save the new message.
 @end ifset
 @ifset en
 Please take care that you may confuse this command as retry
-sending (@pxref{sum-write}). Retry seinding is to send a message after
+sending (@pxref{sum-write}). Retry sending is to send a message after
 editing while Edit mode is to save a message after modifying.
 @end ifset
 
@@ -13612,11 +13617,71 @@ The same as the other commands in Draft mode
 @end ifset
 @end table
 
+@c %%%%%%%%%%%%%%%%%
+@node xauth2, Convention, edit, Tips
+@ifset ja
+@section XOAUTH2
+@end ifset
+@ifset en
+@section XOAUTH2
+@end ifset
+@vindex mew-oauth2-client-id
+@vindex mew-oauth2-client-secret
+@vindex mew-oauth2-redirect-url
+@vindex mew-oauth2-redirect-port
+@vindex mew-oauth2-auth-url
+@vindex mew-oauth2-token-url
+@vindex mew-oauth2-resource-url
+
+@ifset ja
+gmailなどが、認証の仕組みとしてXOAUTH2を要求するようになりました。Mew
+でも、自分で認証認可の設定をすれば、XOAUTH2が利用できます。クライアント
+IDとクライアントシークレットを発行できたら、以下の変数に設定してくださ
+い。
+@end ifset
+@ifset en
+Gmail and other services now require XOAUTH2 as an authentication
+mechanism. Mew can also use XOAUTH2 if you configure the
+authentication and authorization yourself. Once you have issued your
+client ID and client secret, set them in the following variables.
+@end ifset
+
+@lisp
+(setq mew-oauth2-client-id "<client id>")
+(setq mew-oauth2-client-secret "<client secret>")
+@end lisp
+
+@ifset ja
+うまく設定できれば、使い始めるときに、一回だけローカルのブラウザに認可
+画面が表示されます。発行されたアクセストークンは、Mewのパスワードの仕
+組みで保存されます。
+@end ifset
+@ifset en
+If everything is set up properly, the authorization screen will be
+displayed in your local browser only once when you start using it. The
+issued access token will be saved using Mew's password mechanism.
+@end ifset
+
+@ifset ja
+現在、XOAUTH2で通信が確認できているのはgmailとMS365です。MS365では、以
+下の設定も必要です。
+@end ifset
+@ifset en
+Currently, communication with XOAUTH2 has been confirmed with gmail
+and MS365. For MS365, the following settings are also required.
+@end ifset
+
+@lisp
+(setq mew-oauth2-auth-url "https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize")
+(setq mew-oauth2-token-url "https://login.microsoftonline.com/organizations/oauth2/v2.0/token")
+(setq mew-oauth2-resource-url "https://outlook.office.com/IMAP.AccessAsUser.All https://outlook.office.com/SMTP.Send offline_access")
+@end lisp
+
 @c %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 @c      Message Convention
 @c %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-@node Convention, Implementation, edit, Top
+@node Convention, Implementation, xauth2, Top
 @ifset ja
 @chapter メッセージの作法
 @end ifset
@@ -13787,10 +13852,10 @@ continue to use "mewencode". (If Base64 is implemented by Emacs, Mew
 uses the native function.)
 
 @item Why does the cursor jump onto the end of line when searching(@samp{C-s}, @samp{C-r})?
-Thread informations are not displayed in Summary mode. This is because
-the "invisible" property is dynamically put onto them when
-displayed. Strings with this property is not a target of the string
-search. But, thread informations of undisplayed lines do not have this
+Thread information is not displayed in Summary mode. This is because
+the "invisible" property is dynamically put onto it when
+displayed. Strings with this property are not targets of the string
+search. But, thread information of undisplayed lines does not have this
 property, so the string search targets them. Then a matched line is
 displayed and the "invisible" property is put. So, it seems to you that
 the string search matches the end of the line. Mew puts the "invisible"
@@ -13917,7 +13982,7 @@ https://groups.google.com/g/mew-en
 @ifset ja
 Mew は以下の著作権に従います。
 
-Copyright (C) 1994-2023 Mew developing team.@*
+Copyright (C) 1994-2026 Mew developing team.@*
 All rights reserved.
 
 変更の有無にかかわらず、ソースおよびバイナリ形式の再配布および利用は、以
@@ -13950,7 +14015,7 @@ All rights reserved.
 @ifset en
 Mew conforms the following copyright.
 
-Copyright (C) 1994-2023 Mew developing team.@*
+Copyright (C) 1994-2026 Mew developing team.@*
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -14006,7 +14071,7 @@ granted to copy, modify, redistribute this manual but no warranty.
 @end ifset
 
 @c %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-@c      Privacy Poilcy
+@c      Privacy Policy
 @c %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 @node Privacy Policy, Variable Index, ml, Top

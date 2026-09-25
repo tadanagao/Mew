@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; mew-vars2.el
 
 ;; Author:  Mew developing team
@@ -214,7 +215,7 @@ for privacy reasons.")
 
 (defvar mew-mime-content-type-multipart-list
   `(,mew-ct-mlm ,mew-ct-mla)
-  "Candidate of 'Content-Type: Multipart/' when CT: is changed
+  "Candidate of `Content-Type: Multipart/' when CT: is changed
 in draft buffer.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -489,6 +490,7 @@ the next version of Mew.")
     (,mew-in-reply-to:   unstruct   unstruct)
     (,mew-x-face:	 unstruct   unstruct)
     (,mew-face:          unstruct   unstruct)
+    (,mew-bimi-indicator:      unstruct unstruct)
     ("Authentication-Results:" unstruct struct2) ;; capitalized
     ("Domainkey-Signature:"    unstruct unstruct) ;; capitalized
     ("Dkim-Signature:"         unstruct unstruct)) ;; capitalized
@@ -557,16 +559,17 @@ the next version of Mew.")
      ("hardfail" mew-face-header-xmew-bad
       "fail" mew-face-header-xmew-bad
       "softfail" mew-face-header-xmew-bad))
+    ("^BIMI-" nil)
     ("^Delivered-" nil)
     ("^List-" nil) ;; RFC 2369
-;;    ("^Content-" t)
+    ;;    ("^Content-" t)
     ("^\\(Mime-Version\\|Lines\\):$" nil)
     ("^From$" nil)
     ("^Status:$" nil)
     ("^Face:$" nil
      mew-face-header-private
      mew-face-header-marginal)
-    ("^\\(X\\|Original\\)-" nil
+    ("^\\(X\\|Original\\|UI\\)-" nil
      mew-face-header-private
      mew-face-header-marginal))
   "*An alist of field spec for Message mode. Each spec
@@ -581,8 +584,8 @@ present, mew-face-header-marginal is used."
   :group 'mew-highlight
   :type '(alist :key-type regexp
                 :value-type
-                  (choice (list boolean)
-                          (list boolean face face))))
+                (choice (list boolean)
+                        (list boolean face face))))
 
 ;; cons the position to the spec.
 (defun mew-nspec-by-key (key)
@@ -743,10 +746,10 @@ For more detail, see mew-mark-put-mark and mew-mark-afterstep.")
     (,mew-mark-delete "delete" 2 nil t   nil mew-mark-exec-delete nil)
     (,mew-mark-unlink "unlink" 2 nil t   nil mew-mark-exec-unlink nil)
     (,mew-mark-refile "refile" 2 t   mew-mark-kill-refile mew-mark-unrefile
-		                     mew-mark-exec-refile mew-mark-sanity-refile))
+		      mew-mark-exec-refile mew-mark-sanity-refile))
   "*A list of lists which consists of
 mark, name, level, statefullp, kill-line-p,
-undo-func, exec-func, and sanity-fucn.")
+undo-func, exec-func, and sanity-func.")
 
 ;;
 
@@ -924,9 +927,11 @@ to messages and puts them to your mailbox, configure as follows:
 
 Currently, the following keys are supported:
 name, user, mail-domain,
-cc, fcc, dcc, reply-to, organization, header-alist, proto,
+cc, bcc, fcc, dcc, reply-to, organization, header-alist, proto,
+use-x-mailer, use-format-flowed,
+safe-addresses, safe-domains, warn-addresses, warn-domains,
 smtp-server, smtp-port, smtp-ssh-server, smtp-ssl, smtp-ssl-port,
-smtp-user, smtp-auth-list,
+smtp-user, smtp-auth-list, use-smtp-auth, smtp-auth-plain-authorize-id,
 smtp-msgid-user, smtp-msgid-domain, smtp-helo-domain, smtp-mail-from,
 pop-server, pop-port, pop-ssh-server, pop-ssl, pop-ssl-port,
 pop-user, pop-auth, pop-auth-list,
@@ -935,18 +940,26 @@ pop-proxy-server, pop-proxy-port,
 imap-server, imap-port, imap-ssh-server, imap-ssl, imap-ssl-port,
 imap-user, imap-auth, imap-auth-list,
 imap-size, imap-header-only, imap-delete,
-imap-trash-folder, imap-queue-folder, imap-spam-field, imap-spam-word,
+imap-inbox-folder, imap-trash-folder, imap-trash-folder-list,
+imap-queue-folder, imap-spam-folder, imap-spam-field, imap-spam-word,
+imap-spam-pattern, imap-friend-folder, imap-prefix-list,
 imap-proxy-server, imap-proxy-port,
 nntp-server, nntp-port, nntp-ssh-server, nntp-ssl, nntp-ssl-port,
-nntp-user, nntp-size, nntp-header-only,
+nntp-user, nntp-size, nntp-header-only, nntp-newsgroup,
 nntp-msgid-user, nntp-msgid-domain,
+ssh-prog, ssh-prog-args, ssh-prog-ver,
 prog-ssl-arg, ssl-cert-directory, ssl-verify-level,
 ssl-algorithm-priority, ssl-client-keycert-list, ssl-trustfiles,
-inbox-folder, queue-folder, postq-folder,
+ssl-proxy-server, ssl-proxy-port,
+oauth2-client-id, oauth2-client-secret,
+oauth2-redirect-url, oauth2-redirect-port,
+oauth2-auth-url, oauth2-token-url, oauth2-resource-url,
+inbox-folder, queue-folder, postq-folder, inbox-action-alist,
 mailbox-type, mbox-command, mbox-command-arg,
 signature-file, content-type, refile-guess-alist,
 spam-prog, spam-prog-args, ham-prog, ham-prog-args,
-use-old-pgp, pgp-signer, smime-signer, privacy-method,
+use-old-pgp, pgp-signer, smime-signer,
+draft-privacy-method,
 protect-privacy-always, protect-privacy-always-type,
 protect-privacy-encrypted, protect-privacy-encrypted-type,
 protect-privacy-with-old-pgp-signature
@@ -969,7 +982,7 @@ An example is as follows:
 	 (name         \"Kazu Yamamoto\")
 	 (mail-domain  \"example.jp\"))))
 "
-;; bcc can be used but not recommended
+  ;; bcc can be used but not recommended
   :group 'mew-env
   :type '(alist :key-type string
                 :value-type (repeat (cons string string))))

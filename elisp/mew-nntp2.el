@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; mew-nntp2.el for posting
 
 ;; Author:  Mew developing team
@@ -179,14 +180,14 @@
 
 (defun mew-nntp2-open (pnm case server port starttlsp)
   (let ((sprt (mew-*-to-port port))
-	(sslnp (mew-ssl-native-p (mew-nntp-ssl case)))
+	(gnutlsp (mew-gnutls-p (mew-nntp-ssl case)))
 	pro tm)
     (condition-case emsg
 	(progn
 	  (setq tm (run-at-time mew-nntp-timeout-time nil 'mew-nntp2-timeout))
 	  (message "Connecting to the NNTP server...")
 	  (setq pro (mew-open-network-stream pnm nil server sprt
-					     'nntp sslnp starttlsp case))
+					     'nntp gnutlsp starttlsp case))
 	  (setq pro (car pro))
 	  (when (not (processp pro)) (signal 'quit nil))
 	  (mew-process-silent-exit pro)
@@ -221,14 +222,14 @@
 	(sshsrv (mew-nntp-ssh-server case))
 	(sslp (mew-nntp-ssl case))
 	(sslport (mew-nntp-ssl-port case))
-	(sslnp (mew-ssl-native-p (mew-nntp-ssl case)))
+	(gnutlsp (mew-gnutls-p (mew-nntp-ssl case)))
 	(starttlsp
-	 (mew-ssl-starttls-p (mew-nntp-ssl case)
-			     (mew-*-to-string (mew-nntp-port case))
-			     (mew-nntp-ssl-port case)))
+	 (mew-starttls-p (mew-nntp-ssl case)
+			 (mew-*-to-string (mew-nntp-port case))
+			 (mew-nntp-ssl-port case)))
 	process sshname sshpro sslname sslpro lport tls)
     (cond
-     (sslnp
+     (gnutlsp
       (let ((serv (if starttlsp port sslport)))
 	(setq process (mew-nntp2-open pnm case server serv starttlsp))))
      (sshsrv
@@ -239,13 +240,13 @@
 	(when lport
 	  (setq process (mew-nntp2-open pnm case "localhost" lport nil)))))
      (sslp
-      (when starttlsp (setq tls mew-tls-nntp))
-      (setq sslpro (mew-open-ssl-stream case server sslport tls))
+      (when starttlsp (setq tls mew-stunnel-protocol-nntp))
+      (setq sslpro (mew-open-stunnel-stream case server sslport tls))
       (when sslpro
 	(setq sslname (process-name sslpro))
 	(setq lport (mew-ssl-pnm-to-lport sslname))
 	(when lport
-	  (setq process (mew-nntp2-open pnm case mew-ssl-localhost lport nil)))))
+	  (setq process (mew-nntp2-open pnm case mew-stunnel-localhost lport nil)))))
      (t
       (setq process (mew-nntp2-open pnm case server port nil))))
     (if (null process)
@@ -273,9 +274,9 @@
       (set-process-sentinel process 'mew-nntp2-sentinel)
       (set-process-filter process 'mew-nntp2-filter)
       (message "Posting in background...")
-      (when sslnp
-	;; GnuTLS requires a client-initiated command after the
-	;; session is established or upgraded to use TLS because
+      (when (and gnutlsp starttlsp)
+	;; open-network-stream requires a client-initiated command after the
+	;; session is upgraded to use TLS because
 	;; no additional greeting from the server.
 	(mew-nntp-command-mode-reader process pnm))
       )))
@@ -356,8 +357,8 @@
 	  (mew-nntp2-queue case error))
 	(mew-nntp2-log pnm error)
 	(if (memq system-type '(windows-nt ms-dos cygwin))
-	    (message (format "%s  This mail has been queued to %s" error qfld))
-	  (message-box (format "%s  This mail has been queued to %s" error qfld))))
+	    (message "%s  This mail has been queued to %s" error qfld)
+	  (message-box "%s  This mail has been queued to %s" error qfld)))
        (done
 	(message "Posting in background...done"))
        (t
@@ -385,7 +386,7 @@
 	 (qfld (mew-postq-folder case))
 	 (oname (buffer-name))
 	 (work (buffer-file-name))
-	 file-info file info nname)
+	 file-info file (info nil) nname)
     (mew-local-folder-check qfld)
     (setq file-info (mew-queue-enqueue work qfld))
     (mew-set '(file info) file-info)

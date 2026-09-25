@@ -15,14 +15,14 @@ END-INFO-DIR-ENTRY
 
 File: mew.ja.info, Node: Top, Next: Overview, Prev: (dir), Up: (dir)
 
-Mew 6.9 マニュアル
-******************
+Mew 6.11 マニュアル
+*******************
 
                                                               山本和彦
                                                        作成 1996/02/19
-                                                       更新 2023/02/11
+                                                       更新 2026/04/16
 
-このマニュアルでは、Mew バージョン 6.9 について解説します。このマニュ
+このマニュアルでは、Mew バージョン 6.11 について解説します。このマニュ
 アルの他に、Mew に関する有益な情報は Mew の公式ホームページ
 (http://www.Mew.org/)から得られるかもしれません。
 
@@ -81,7 +81,7 @@ File: mew.ja.info, Node: characteristic, Next: Emacsen, Prev: Overview, Up: Over
 Mew の特長
 ==========
 
-Mew バージョン 6.9 の特長を以下に示します。
+Mew バージョン 6.11 の特長を以下に示します。
 
    - 複雑な構造を持つメッセージを簡単に表示できます。メッセージを表示
      する作業は、`SPC' を押すだけです。
@@ -1217,7 +1217,7 @@ File: mew.ja.info, Node: Composing, Next: header, Prev: invalid, Up: Top
      To:
      Subject:
      From: Kazu Yamamoto <kazu@example.org>
-     X-Mailer: Mew version 6.9 on Emacs 28.2
+     X-Mailer: Mew version 6.11 on Emacs 30.2
      ----
 
 これを Draft モードといいます。Draft モードにおいて、"----" より上をヘッ
@@ -1700,7 +1700,7 @@ File: mew.ja.info, Node: send, Next: cite, Prev: addr-comp2, Up: Composing
      To: pooh
      Subject: 明日の日曜日
      From: Piglet <piglet@example.org>
-     X-Mailer: Mew version 6.9 on Emacs 28.2
+     X-Mailer: Mew version 6.11 on Emacs 30.2
      ----
      明日の日曜日、遊びませんか？
 
@@ -1714,7 +1714,7 @@ File: mew.ja.info, Node: send, Next: cite, Prev: addr-comp2, Up: Composing
      To: winnie-the-pooh@example.net
      Subject: =?iso-2022-jp?B?GyRCTEBGfCRORnxNS0Z8GyhC?=
      From: Piglet <piglet@example.org>
-     X-Mailer: Mew version 6.9 on Emacs 28.2
+     X-Mailer: Mew version 6.11 on Emacs 30.2
      Mime-Version: 1.0
      Content-Type: Text/Plain; charset=iso-2022-jp
      Content-Transfer-Encoding: 7bit
@@ -1842,7 +1842,7 @@ File: mew.ja.info, Node: mime-comp, Next: charset-guess, Prev: cite, Up: Composi
      To: mew-dist
      Subject: ここがヘッダ
      From: Kazu Yamamoto <kazu@example.org>
-     X-Mailer: Mew version 6.9 on Emacs 28.2
+     X-Mailer: Mew version 6.11 on Emacs 30.2
      ----
      本文だよ。
 
@@ -3834,6 +3834,11 @@ File: mew.ja.info, Node: dbsearch, Next: keyword, Prev: condition, Up: Virtual
 `Google Desktop'
      一度だけ `kM' を実行する必要があります。`km' は必要ありません。
      `k/' のみが利用できます。
+`Notmuch'
+     定期的に `kM' を実行する必要があります。コマンドラインで、
+     "notmuch new" を実行しても構いません。`k/' のみが利用できます。
+     `k/' によって入力された検索パターンは、"notmuch" コマンドに
+     そのまま渡されます。
 
 検索エンジンの初期値は、最初に見つかった利用できるものに自動的に設定さ
 れます。明示的に指定したい場合は、
@@ -4612,7 +4617,7 @@ Mew では、メッセージを受信する際に POP を利用できます。�
      は `'apop'。
 `mew-pop-auth-list'
      SASL で利用する認証方式のリスト。優先順位の高い順に並べる。現在、
-     "CRAM-MD5" が利用可能。
+     "XOAUTH2", "CRAM-MD5", "PLAIN" が利用可能。
 `mew-pop-delete'
      POP サーバからメッセージを取得後、POP サーバにあるメッセージを削
      除するか否か。`t' なら削除。`nil' なら削除しない。数値 N なら、最
@@ -4655,7 +4660,7 @@ Mew では、メッセージを受信する際に IMAP を利用できます。�
      `mew-imap-auth-list' に基づいた SASL を意味する。初期値は `t'。
 `mew-imap-auth-list'
      SASL で利用する認証方式のリスト。優先順位の高い順に並べる。現在、
-     "CRAM-MD5" と "LOGIN" が利用可能。
+     "XOAUTH2", "CRAM-MD5", "LOGIN" が利用可能。
 `mew-imap-delete'
      IMAP サーバからメッセージを取得後、IMAP サーバにあるメッセージを
      削除するか否か。`t' なら削除。`nil' なら削除しない。数値 N なら、
@@ -4727,10 +4732,9 @@ Mew では、メッセージを送信する際に SMTP を利用します。SMTP
 `mew-smtp-server'
      SMTP サーバの名前。
 `mew-smtp-port'
-     SMTP ポート番号。絶対パス名を指定すると Unix ドメインソケットを使
-     用する。
-`mew-smtp-submission-family'
-     SMTP サーバと接続する際に用いるアドレスファミリ。初期値は 'ipv4。
+     SMTP ポート番号。以前は "smtp"だったが、現在は "submission"に変更
+     されている。絶対パス名を指定すると Unix ドメインソケットを使用す
+     る。
 `mew-smtp-ssh-server'
      SSH 経由でメッセージを送る際の SSH サーバの名前。
 `mew-smtp-ssl'
@@ -4743,7 +4747,7 @@ Mew では、メッセージを送信する際に SMTP を利用します。SMTP
      メールアドレスに設定される。
 `mew-smtp-auth-list'
      SMTP AUTH で利用する認証方式のリスト。優先順位の高い順に並べる。
-     初期値は、'("CRAM-MD5" "PLAIN" "LOGIN")。
+     初期値は、'("XOAUTH2" "CRAM-MD5" "PLAIN" "LOGIN")。
 `mew-smtp-helo-domain'
      SMTP HELO コマンドで使われるサーバ名。初期値は "localhost"。
 `mew-smtp-mail-from'
@@ -4764,20 +4768,10 @@ Mew では、メッセージを送信する際に SMTP を利用します。SMTP
 
      message-id = *random*.smtp-msgid-user@smtp-msgid-domain
 
-Message Submission (ポート番号が 587 である送信用の SMTP)を使いたい場
-合は、以下のように設定して下さい。
-
-     (setq mew-smtp-port "submission")
-
 送信サーバとの接続に Unix ドメインソケットを使いたい場合は、以下のように
 `mew-smtp-port' に絶対パス名を設定して下さい。
 
      (setq mew-smtp-port "/var/run/msp.sock")
-
-送信サーバとの接続に IPv6 を使いたい場合は、以下のように
-`mew-smtp-submission-family' に 'ipv6 を設定して下さい。
-
-     (setq mew-smtp-submission-family 'ipv6)
 
 TLS/SSL (*Note TLS/SSL::) の章も参考にして下さい。
 
@@ -4908,7 +4902,7 @@ Draft モードでは、ケースを自動的に設定することもできま�
 `mew-case-guess-when-composed'
      この変数が `t' の場合、メッセージが作成されたときに、
      `mew-case-guess-alist' に従ってケースが設定される。初期値は
-     `nil'
+     `nil'。
 `mew-case-guess-when-replied'
      この変数が `t' の場合、返答によって草稿が用意されたときに、
      `mew-case-guess-when-replied-alist' に従ってケースが設定される。
@@ -5026,6 +5020,7 @@ File: mew.ja.info, Node: Tips, Next: region, Prev: custom-misc, Up: Top
 * addr-warn::                   アドレスの警告
 * biff::                        Biff
 * edit::                        Edit モード
+* xauth2::                      XOAUTH2
 
 
 
@@ -5257,15 +5252,17 @@ STARTTLS は、プロトコルの通常のポート番号と TLS 用のポート
 するように設定することで有効になります。たとえば、POP では以下のように
 します。
 
-     ;; A default value of mew-pop-port is "pop3" (110)
      (setq mew-pop-ssl t)
-     (setq mew-pop-ssl-port mew-pop-port) ;; The default is "pop3s" (995)
+     ;; The default value of mew-pop-ssl-port is "pop3s" (995)
+     ;; The default value of mew-pop-port is "pop3" (110)
+     (setq mew-pop-ssl-port mew-pop-port)
 
 以下は、Message Submission で STARTTLS を有効にするための設定例です。
 
-     (setq mew-smtp-port "submission") ;; The default is "smtp" (25)
      (setq mew-smtp-ssl t)
-     (setq mew-smtp-ssl-port mew-smtp-port) ;; The default is 465
+     ;; The default value of mew-smtp-ssl-port is "submissions" (465)
+     ;; The default value of mew-smtp-port is "submission" (587)
+     (setq mew-smtp-ssl-port mew-smtp-port)
 
 
 
@@ -5442,7 +5439,7 @@ Biff の対象となるサーバとプロトコルは、Mew の起動時に `mew
 
 
 
-File: mew.ja.info, Node: edit, Next: Convention, Prev: biff, Up: Tips
+File: mew.ja.info, Node: edit, Next: xauth2, Prev: biff, Up: Tips
 
 Edit モード
 ===========
@@ -5482,9 +5479,35 @@ Edit モードでのコマンドをまとめます。
      Draft モードと同じ。
 
 
+
+File: mew.ja.info, Node: xauth2, Next: Convention, Prev: edit, Up: Tips
+
+XOAUTH2
+=======
+
+gmailなどが、認証の仕組みとしてXOAUTH2を要求するようになりました。Mew
+でも、自分で認証認可の設定をすれば、XOAUTH2が利用できます。クライアン
+トIDとクライアントシークレットを発行できたら、以下の変数に設定してくだ
+さい。
+
+     (setq mew-oauth2-client-id "<client id>")
+     (setq mew-oauth2-client-secret "<client secret>")
+
+うまく設定できれば、使い始めるときに、一回だけローカルのブラウザに認可
+画面が表示されます。発行されたアクセストークンは、Mewのパスワードの仕
+組みで保存されます。
+
+現在、XOAUTH2で通信が確認できているのはgmailとMS365です。MS365では、以
+下の設定も必要です。
+
+     (setq mew-oauth2-auth-url "https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize")
+     (setq mew-oauth2-token-url "https://login.microsoftonline.com/organizations/oauth2/v2.0/token")
+     (setq mew-oauth2-resource-url "https://outlook.office.com/IMAP.AccessAsUser.All https://outlook.office.com/SMTP.Send offline_access")
+
+
 
 
-File: mew.ja.info, Node: Convention, Next: Implementation, Prev: edit, Up: Top
+File: mew.ja.info, Node: Convention, Next: Implementation, Prev: xauth2, Up: Top
 
 メッセージの作法
 ****************
@@ -5626,7 +5649,7 @@ File: mew.ja.info, Node: Copyright, Next: Privacy Policy, Prev: ml, Up: Top
 
 Mew は以下の著作権に従います。
 
-Copyright (C) 1994-2023 Mew developing team.
+Copyright (C) 1994-2026 Mew developing team.
 All rights reserved.
 
 変更の有無にかかわらず、ソースおよびバイナリ形式の再配布および利用は、
@@ -5803,6 +5826,12 @@ File: mew.ja.info, Node: Variable Index, Next: Key Index, Prev: Privacy Policy, 
 * mew-nntp-user:                nntp.
 * mew-nntp2-flush-hook:         hooks.
 * mew-nntp2-sentinel-hook:      hooks.
+* mew-oauth2-auth-url:          xauth2.                 (line   5)
+* mew-oauth2-client-id:         xauth2.                 (line   5)
+* mew-oauth2-client-secret:     xauth2.                 (line   5)
+* mew-oauth2-redirect-url:      xauth2.                 (line   5)
+* mew-oauth2-resource-url:      xauth2.                 (line   5)
+* mew-oauth2-token-url:         xauth2.                 (line   5)
 * mew-pack-hook:                hooks.
 * mew-pick-pattern-list:        condition.              (line   5)
 * mew-pop-auth-list:            pop.
@@ -5885,7 +5914,6 @@ File: mew.ja.info, Node: Variable Index, Next: Key Index, Prev: Privacy Policy, 
 * mew-smtp-ssl-port:            TLS/SSL2.               (line   5)
 * mew-smtp-ssl-port:            smtp.
 * mew-smtp-ssl:                 smtp.
-* mew-smtp-submission-family:   smtp.
 * mew-smtp-user:                smtp.
 * mew-sort-default-key-alist:   sorting.                (line   5)
 * mew-sort-default-key:         sorting.                (line   5)
@@ -6230,113 +6258,114 @@ File: mew.ja.info, Node: Key Index, Prev: Variable Index, Up: Top
 
 Tag table:
 Node: Top289
-Node: Overview1368
-Node: characteristic2011
-Node: Emacsen3023
-Node: modes3201
-Node: folder convention3711
-Node: configuration5586
-Node: password7915
-Node: start10583
-Node: Viewing11349
-Node: singlepart12328
-Node: multipart13232
-Node: analysis15499
-Node: cipher-viewing17760
-Node: retrieving20639
-Node: moving23205
-Node: sum-write24770
-Node: features26234
-Node: status-update27808
-Node: invalid28509
-Node: Composing29805
-Node: header31313
-Node: cheader31988
-Node: addr-comp33193
-Node: addrbook34188
-Node: auto-alias36327
-Node: addr-comp137337
-Node: addr-comp239032
-Node: send40393
-Node: cite42503
-Node: mime-comp43904
-Node: charset-guess49483
-Node: longline51703
-Node: reply52839
-Node: forward55845
-Node: resend56437
-Node: shortcut57618
-Node: mark-b-comp61030
-Node: pgp-key63444
-Node: anonymous64019
-Node: Marks64994
-Node: unread mark66137
-Node: delete mark67009
-Node: refile mark68594
-Node: target mark69587
-Node: escape mark70648
-Node: unmark71163
-Node: mark change71780
-Node: sync72645
-Node: off-line73338
-Node: mew-mark74605
-Node: Refile75133
-Node: by-folder76281
-Node: by-alist77462
-Node: by-thread79116
-Node: by-from-folder79732
-Node: by-from80685
-Node: by-newsgroups81896
-Node: by-default82131
-Node: guess-rule82488
-Node: auto-refile84016
-Node: copy-msg85717
-Node: Virtual86586
-Node: selection87704
-Node: sorting88210
-Node: dialog89488
-Node: search90154
-Node: condition90791
-Node: dbsearch92529
-Node: keyword93411
-Node: thread93910
-Node: thread-op94715
-Node: Quit96031
-Node: Customize96454
-Node: summary-mode97142
-Node: message-mode99931
-Node: draft-mode102765
-Node: charset104860
-Node: highlight106486
-Node: hooks108538
-Node: pop111944
-Node: imap113102
-Node: nntp114189
-Node: smtp115384
-Node: config117542
-Node: config2122070
-Node: custom-misc123226
-Node: Tips123943
-Node: region124595
-Node: visiting125104
-Node: SSH125466
-Node: TLS/SSL126054
-Node: Stunnel126795
-Node: GnuTLS128133
-Node: TLS/SSL2129957
-Node: spam131043
-Node: spam2132799
-Node: addr-warn133915
-Node: biff134688
-Node: edit135170
-Node: Convention135930
-Node: Implementation136970
-Node: Avail138429
-Node: obtain138678
-Node: ml138902
-Node: Copyright139081
-Node: Privacy Policy140089
-Node: Variable Index140287
-Node: Key Index156192
+Node: Overview1371
+Node: characteristic2014
+Node: Emacsen3027
+Node: modes3205
+Node: folder convention3715
+Node: configuration5590
+Node: password7919
+Node: start10587
+Node: Viewing11353
+Node: singlepart12332
+Node: multipart13236
+Node: analysis15503
+Node: cipher-viewing17764
+Node: retrieving20643
+Node: moving23209
+Node: sum-write24774
+Node: features26238
+Node: status-update27812
+Node: invalid28513
+Node: Composing29809
+Node: header31318
+Node: cheader31993
+Node: addr-comp33198
+Node: addrbook34193
+Node: auto-alias36332
+Node: addr-comp137342
+Node: addr-comp239037
+Node: send40398
+Node: cite42510
+Node: mime-comp43911
+Node: charset-guess49491
+Node: longline51711
+Node: reply52847
+Node: forward55853
+Node: resend56445
+Node: shortcut57626
+Node: mark-b-comp61038
+Node: pgp-key63452
+Node: anonymous64027
+Node: Marks65002
+Node: unread mark66145
+Node: delete mark67017
+Node: refile mark68602
+Node: target mark69595
+Node: escape mark70656
+Node: unmark71171
+Node: mark change71788
+Node: sync72653
+Node: off-line73346
+Node: mew-mark74613
+Node: Refile75141
+Node: by-folder76289
+Node: by-alist77470
+Node: by-thread79124
+Node: by-from-folder79740
+Node: by-from80693
+Node: by-newsgroups81904
+Node: by-default82139
+Node: guess-rule82496
+Node: auto-refile84024
+Node: copy-msg85725
+Node: Virtual86594
+Node: selection87712
+Node: sorting88218
+Node: dialog89496
+Node: search90162
+Node: condition90799
+Node: dbsearch92537
+Node: keyword93419
+Node: thread93918
+Node: thread-op94723
+Node: Quit96039
+Node: Customize96462
+Node: summary-mode97150
+Node: message-mode99939
+Node: draft-mode102773
+Node: charset104868
+Node: highlight106494
+Node: hooks108546
+Node: pop111952
+Node: imap113130
+Node: nntp114227
+Node: smtp115422
+Node: config117327
+Node: config2121856
+Node: custom-misc123012
+Node: Tips123729
+Node: region124421
+Node: visiting124930
+Node: SSH125292
+Node: TLS/SSL125880
+Node: Stunnel126621
+Node: GnuTLS127959
+Node: TLS/SSL2129783
+Node: spam130946
+Node: spam2132702
+Node: addr-warn133818
+Node: biff134591
+Node: edit135073
+Node: xauth2135828
+Node: Convention136638
+Node: Implementation137680
+Node: Avail139139
+Node: obtain139388
+Node: ml139612
+Node: Copyright139791
+Node: Privacy Policy140799
+Node: Variable Index140997
+Node: Key Index157266
 
 End tag table

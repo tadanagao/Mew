@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; mew-edit.el
 
 ;; Author:  Mew developing team
@@ -456,11 +457,11 @@ If executed with '\\[universal-argument]', coding-system is asked."
 
 (defun mew-input-burst-folder ()
   (let (default)
-     (if (and mew-use-burst-folder-history mew-burst-last-folder)
-	 (setq default mew-burst-last-folder)
-       (setq default (mew-inbox-folder))) ;; local folder
-     (setq mew-burst-last-folder (mew-input-local-folder default))
-     mew-burst-last-folder))
+    (if (and mew-use-burst-folder-history mew-burst-last-folder)
+	(setq default mew-burst-last-folder)
+      (setq default (mew-inbox-folder))) ;; local folder
+    (setq mew-burst-last-folder (mew-input-local-folder default))
+    mew-burst-last-folder))
 
 (defun mew-summary-burst-part (part folder newmsg &optional num)
   (let (n len nums entry file)
@@ -768,7 +769,7 @@ The message is assumed to be a valid MIME message."
   (mew-mark-kill-line)
   (set-buffer-modified-p nil)
   ;; Need to delete Message window because the target message will be
-  ;; modified and its content wiil be changed.
+  ;; modified and its content will be changed.
   (mew-current-set-window-config)
   (mew-window-configure 'draft)
   ;; main part
